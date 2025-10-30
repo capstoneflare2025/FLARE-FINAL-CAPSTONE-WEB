@@ -1558,8 +1558,6 @@ function closeFFChatMessageModal(){
 })();
 
 
-
-
 /* =========================================================
  * EMAIL → STATION & LIVE GEO WRITE (for firefighter logins)
  * ========================================================= */

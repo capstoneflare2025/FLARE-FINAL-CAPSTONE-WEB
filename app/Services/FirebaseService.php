@@ -12,8 +12,11 @@ class FirebaseService
 {
     protected Database $database;
 
-    /** New fixed station root */
-    private string $stationRoot = 'TagumCityCentralFireStation/AllReport';
+    /**
+     * Station root (dynamic):
+     *   e.g. "CapstoneFlare/LaFilipinaFireStation/AllReport"
+     */
+    private string $stationRoot;
 
     public function __construct()
     {
@@ -30,6 +33,12 @@ class FirebaseService
                 ->withDatabaseUri((string) config('services.firebase.database_url'));
 
             $this->database = $firebase->createDatabase();
+
+            // Pick station from session (set by AuthController after login)
+            // Fallback to LaFilipina if somehow missing (safe default)
+            $stationKey = session('station') ?: 'CapstoneFlare/LaFilipinaFireStation';
+            $this->stationRoot = rtrim($stationKey, '/').'/AllReport';
+
         } catch (\Throwable $e) {
             Log::critical('Firebase init failed', ['error' => $e->getMessage()]);
             abort(500, 'Service initialization error');
@@ -46,27 +55,22 @@ class FirebaseService
      * Accepted $reportType:
      *   'fire' | 'otherEmergency' | 'emergencyMedicalServices' | 'sms'
      *
-     * NEW Result pattern:
-     *   TagumCityCentralFireStation/AllReport/{FireReport|OtherEmergencyReport|EmergencyMedicalServicesReport|SmsReport}
+     * Result pattern:
+     *   {CapstoneFlare/<Station>/AllReport}/{FireReport|OtherEmergencyReport|EmergencyMedicalServicesReport|SmsReport}
      *
-     * NOTE: $prefix is kept for compatibility but not used anymore.
+     * NOTE: $prefix is ignored (kept for compatibility with existing calls).
      */
     private function baseNode(string $prefix, string $reportType): string
     {
         $root = $this->stationRoot;
 
-        switch ($reportType) {
-            case 'fire':
-                return "{$root}/FireReport";
-            case 'otherEmergency':
-                return "{$root}/OtherEmergencyReport";
-            case 'emergencyMedicalServices':
-                return "{$root}/EmergencyMedicalServicesReport";
-            case 'sms':
-                return "{$root}/SmsReport";
-            default:
-                return "{$root}/OtherEmergencyReport";
-        }
+        return match ($reportType) {
+            'fire'                    => "{$root}/FireReport",
+            'otherEmergency'          => "{$root}/OtherEmergencyReport",
+            'emergencyMedicalServices'=> "{$root}/EmergencyMedicalServicesReport",
+            'sms'                     => "{$root}/SmsReport",
+            default                   => "{$root}/OtherEmergencyReport",
+        };
     }
 
     /** Normalize HH:mm[:ss] to 24h; allow AM/PM inputs too. */
@@ -94,7 +98,7 @@ class FirebaseService
      * Readers
      * --------------------------------------------------------- */
 
-    /** Fire: TagumCityCentralFireStation/AllReport/FireReport */
+    /** Fire → {Station}/AllReport/FireReport */
     public function getFireReports(string $prefix): array
     {
         try {
@@ -131,7 +135,7 @@ class FirebaseService
         }
     }
 
-    /** Other Emergency: TagumCityCentralFireStation/AllReport/OtherEmergencyReport */
+    /** Other → {Station}/AllReport/OtherEmergencyReport */
     public function getOtherEmergencyReports(string $prefix): array
     {
         try {
@@ -168,7 +172,7 @@ class FirebaseService
         }
     }
 
-    /** EMS: TagumCityCentralFireStation/AllReport/EmergencyMedicalServicesReport */
+    /** EMS → {Station}/AllReport/EmergencyMedicalServicesReport */
     public function getEmergencyMedicalServicesReports(string $prefix): array
     {
         try {
@@ -204,44 +208,36 @@ class FirebaseService
         }
     }
 
-        // Inside FirebaseService
+    /** Example utility: fetch all app users */
+    public function getUsers()
+    {
+        try {
+            $users = [];
+            $userRef = $this->database->getReference('Users');
+            $snapshot = $userRef->getValue();
 
-        public function getUsers()
-        {
-            try {
-                $users = [];
-                $userRef = $this->database->getReference('Users');  // Refers to the "Users" node in Firebase Realtime Database
-
-                // Fetch all users from Firebase Realtime Database
-                $snapshot = $userRef->getValue();
-
-                // If there are users, process them
-                if ($snapshot) {
-                    foreach ($snapshot as $key => $userData) {
-                        $users[] = [
-                            'name' => $userData['name'] ?? 'No Name',  // User's name
-                            'contact' => $userData['contact'] ?? 'No Contact',  // User's contact number
-                            'email' => $userData['email'] ?? 'No Email',  // User's email address
-                        ];
-                    }
+            if ($snapshot) {
+                foreach ($snapshot as $key => $userData) {
+                    $users[] = [
+                        'name'    => $userData['name'] ?? 'No Name',
+                        'contact' => $userData['contact'] ?? 'No Contact',
+                        'email'   => $userData['email'] ?? 'No Email',
+                    ];
                 }
-
-                return $users;
-            } catch (\Throwable $e) {
-                Log::error("Error fetching users: " . $e->getMessage());
-                return [];
             }
+
+            return $users;
+        } catch (\Throwable $e) {
+            Log::error("Error fetching users: " . $e->getMessage());
+            return [];
         }
-
-
+    }
 
     /* ---------------------------------------------------------
      * Status updates
      * --------------------------------------------------------- */
 
-    /**
-     * Kept signature; path now points to station root AllReport tree.
-     */
+    /** Kept signature; path now points to the logged-in station’s AllReport tree. */
     public function updateReportStatus(string $prefix, string $incidentId, string $status, bool $isOtherEmergency = false): bool
     {
         try {
@@ -278,8 +274,8 @@ class FirebaseService
      * --------------------------------------------------------- */
 
     /**
-     * New path:
-     *   TagumCityCentralFireStation/AllReport/{FireReport|OtherEmergencyReport|EmergencyMedicalServicesReport|SmsReport}/{incidentId}/messages/{pushKey}
+     * Path:
+     *   {Station}/AllReport/{FireReport|OtherEmergencyReport|EmergencyMedicalServicesReport|SmsReport}/{incidentId}/messages/{pushKey}
      */
     public function storeUnifiedMessage(
         string $prefix,
@@ -303,8 +299,8 @@ class FirebaseService
      * --------------------------------------------------------- */
 
     /**
-     * New path:
-     *   TagumCityCentralFireStation/AllReport/ResponseMessage/{pushKey}
+     * Path:
+     *   {Station}/AllReport/ResponseMessage/{pushKey}
      */
     public function storeStationResponseSummary(string $prefix, array $payload): bool
     {
@@ -322,63 +318,53 @@ class FirebaseService
      * SMS reports
      * --------------------------------------------------------- */
 
-    /**
-     * Now reads ONLY from:
-     *   TagumCityCentralFireStation/AllReport/SmsReport
-     */
-  public function getSmsReports(string $prefix): array
-{
-    try {
-        // e.g. TagumCityCentralFireStation/AllReport/SmsReport
-        $node = $this->baseNode($prefix, 'sms');
-        $raw  = $this->database->getReference($node)->getValue();
-        if (!$raw) return [];
+    /** Reads ONLY from {Station}/AllReport/SmsReport */
+    public function getSmsReports(string $prefix): array
+    {
+        try {
+            $node = $this->baseNode($prefix, 'sms');
+            $raw  = $this->database->getReference($node)->getValue();
+            if (!$raw) return [];
 
-        $out = [];
-        foreach ($raw as $id => $report) {
-            // Prefer server-side numeric timestamps if present
-            $timestamp = $this->pickTimestamp($report); // checks: timestamp|createdAt|updatedAt|parsed
+            $out = [];
+            foreach ($raw as $id => $report) {
+                $timestamp = $this->pickTimestamp($report);
 
-            $out[] = [
-                'id'                                => $id,
-                'name'                              => $report['name'] ?? null,
-                'location'                          => $report['location'] ?? null,
-                'fireReport'                        => $report['fireReport'] ?? ($report['message'] ?? null),
-                'date'                              => $report['date'] ?? null,                               // Android sends MM/dd/yyyy (e.g., 10/13/2025)
-                'time'                              => $this->normalizeTime($report['time'] ?? null),        // normalize to 24h HH:mm[:ss]
-                'contact'                           => $report['contact'] ?? null,
-                'latitude'                          => array_key_exists('latitude',  $report) ? (float) $report['latitude']  : null,
-                'longitude'                         => array_key_exists('longitude', $report) ? (float) $report['longitude'] : null,
-                'status'                            => ucfirst(strtolower($report['status'] ?? 'Pending')),
-                'timestamp'                         => is_numeric($timestamp) ? (int) $timestamp : null,
+                $out[] = [
+                    'id'                           => $id,
+                    'name'                         => $report['name'] ?? null,
+                    'location'                     => $report['location'] ?? null,
+                    'fireReport'                   => $report['fireReport'] ?? ($report['message'] ?? null),
+                    'date'                         => $report['date'] ?? null, // Android: MM/dd/yyyy
+                    'time'                         => $this->normalizeTime($report['time'] ?? null),
+                    'contact'                      => $report['contact'] ?? null,
+                    'latitude'                     => array_key_exists('latitude',  $report) ? (float) $report['latitude']  : null,
+                    'longitude'                    => array_key_exists('longitude', $report) ? (float) $report['longitude'] : null,
+                    'status'                       => ucfirst(strtolower($report['status'] ?? 'Pending')),
+                    'timestamp'                    => is_numeric($timestamp) ? (int) $timestamp : null,
 
-                // nearest station metadata (optional, if present)
-                'nearestStationName'                => $report['nearestStationName'] ?? null,
-                'nearestStationDistanceMeters'      => array_key_exists('nearestStationDistanceMeters', $report)
-                                                       ? (int) $report['nearestStationDistanceMeters']
-                                                       : null,
+                    // nearest station metadata (optional)
+                    'nearestStationName'           => $report['nearestStationName'] ?? null,
+                    'nearestStationDistanceMeters' => array_key_exists('nearestStationDistanceMeters', $report)
+                        ? (int) $report['nearestStationDistanceMeters']
+                        : null,
 
-                // destination (central) station name
-                'fireStationName'                   => $report['fireStationName'] ?? null,
-            ];
+                    // destination (this station) name
+                    'fireStationName'              => $report['fireStationName'] ?? null,
+                ];
+            }
+
+            // Newest → oldest
+            usort($out, fn($a, $b) => ($b['timestamp'] ?? 0) <=> ($a['timestamp'] ?? 0));
+
+            return $out;
+        } catch (\Throwable $e) {
+            Log::error("Error fetching SMS reports: " . $e->getMessage());
+            return [];
         }
-
-        // Newest → oldest so SMS appears on top in “All Reports”
-        usort($out, fn($a, $b) => ($b['timestamp'] ?? 0) <=> ($a['timestamp'] ?? 0));
-
-        return $out;
-    } catch (\Throwable $e) {
-        Log::error("Error fetching SMS reports: " . $e->getMessage());
-        return [];
     }
-}
 
-
-
-    /**
-     * Now updates ONLY at:
-     *   TagumCityCentralFireStation/AllReport/SmsReport/{incidentId}
-     */
+    /** Updates ONLY at {Station}/AllReport/SmsReport/{incidentId} */
     public function updateSmsReportStatus(string $prefix, string $incidentId, string $status): bool
     {
         try {

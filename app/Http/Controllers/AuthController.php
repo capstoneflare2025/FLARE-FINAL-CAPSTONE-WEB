@@ -27,14 +27,12 @@ class AuthController extends Controller
 
             $factory = (new Factory())->withServiceAccount($serviceAccount);
 
-            // Optional if you have a Realtime DB URL in config:
             if (config('services.firebase.database_url')) {
                 $factory = $factory->withDatabaseUri(config('services.firebase.database_url'));
             }
 
             $this->auth = $factory->createAuth();
             $this->db   = $factory->createDatabase();
-
         } catch (\Throwable $e) {
             Log::critical('Firebase init failed', ['error' => $e->getMessage()]);
             abort(500, 'Service initialization error');
@@ -52,7 +50,7 @@ class AuthController extends Controller
         $password = (string) $request->input('password');
 
         try {
-            // 1) Sign in with Firebase Auth (password is only in Auth, not in Profile)
+            // 1) Sign in with Firebase Auth (email/password)
             $firebaseApiKey = (string) config('services.firebase.api_key');
 
             $resp = Http::post("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={$firebaseApiKey}", [
@@ -69,64 +67,87 @@ class AuthController extends Controller
             $verifiedIdToken = $this->auth->verifyIdToken($idToken);
             $uid = (string) $verifiedIdToken->claims()->get('sub');
 
-            // 2) Authorization: check that this account is allowed for the station
-            $stationPath = 'TagumCityCentralFireStation/Profile';
-            $profile = $this->db->getReference($stationPath)->getValue() ?? [];
+            // 2) Authorization: allow if user is listed under ANY of the 3 stations
+            $stations = [
+                'CapstoneFlare/LaFilipinaFireStation' => 'LaFilipina Fire Station',
+                'CapstoneFlare/CanocotanFireStation'  => 'Canocotan Fire Station',
+                'CapstoneFlare/MabiniFireStation'     => 'Mabini Fire Station',
+            ];
 
-            // Build a set of allowed emails (handles either "email" or "emails")
-            $allowedEmails = [];
+            $matchedStationKey   = null; // e.g. CapstoneFlare/LaFilipinaFireStation
+            $matchedStationLabel = null; // human-friendly label
 
-            if (isset($profile['email']) && is_string($profile['email'])) {
-                $allowedEmails[] = strtolower($profile['email']);
-            }
+            foreach ($stations as $stationKey => $label) {
+                $profile = $this->db->getReference($stationKey . '/Profile')->getValue() ?? [];
 
-            // If "emails" is an array or map
-            if (isset($profile['emails'])) {
-                if (is_array($profile['emails'])) {
-                    foreach ($profile['emails'] as $k => $v) {
-                        // support ["a@x.com","b@y.com"] or {"uid1":"a@x.com","uid2":"b@y.com"}
-                        if (is_string($v)) {
-                            $allowedEmails[] = strtolower($v);
-                        } elseif (is_array($v) && isset($v['email']) && is_string($v['email'])) {
-                            $allowedEmails[] = strtolower($v['email']);
+                // Build allowed emails
+                $allowedEmails = [];
+
+                if (isset($profile['email']) && is_string($profile['email'])) {
+                    $allowedEmails[] = strtolower($profile['email']);
+                }
+
+                if (isset($profile['emails'])) {
+                    if (is_array($profile['emails'])) {
+                        foreach ($profile['emails'] as $k => $v) {
+                            // supports ["a@x.com","b@y.com"] or {"uid1":"a@x.com"} or {"x":{"email":"a@x.com"}}
+                            if (is_string($v)) {
+                                $allowedEmails[] = strtolower($v);
+                            } elseif (is_array($v) && isset($v['email']) && is_string($v['email'])) {
+                                $allowedEmails[] = strtolower($v['email']);
+                            }
+                        }
+                    } elseif (is_string($profile['emails'])) {
+                        $allowedEmails[] = strtolower($profile['emails']);
+                    }
+                }
+
+                $allowedEmails = array_values(array_unique($allowedEmails));
+
+                // Build allowed UIDs
+                $allowedUids = [];
+                if (isset($profile['users']) && is_array($profile['users'])) {
+                    // supports {"uid123": true} OR {"uid123": {"active":true}}
+                    foreach ($profile['users'] as $key => $val) {
+                        if (is_string($key)) {
+                            $allowedUids[] = $key;
                         }
                     }
-                } elseif (is_string($profile['emails'])) {
-                    // edge case: single string
-                    $allowedEmails[] = strtolower($profile['emails']);
+                }
+
+                $emailAuthorized = in_array($email, $allowedEmails, true);
+                $uidAuthorized   = in_array($uid, $allowedUids, true);
+
+                if ($emailAuthorized || $uidAuthorized) {
+                    $matchedStationKey   = $stationKey;
+                    // Prefer profile.name if present
+                    $matchedStationLabel = (isset($profile['name']) && is_string($profile['name']) && $profile['name'] !== '')
+                        ? $profile['name']
+                        : $label;
+                    break;
                 }
             }
 
-            // Optional: also allow by UID if your Profile stores a users map
-            $allowedUids = [];
-            if (isset($profile['users']) && is_array($profile['users'])) {
-                // supports {"uid123": true, "uid456": true} OR {"uid123": {"active":true}}
-                foreach ($profile['users'] as $key => $val) {
-                    if (is_string($key)) {
-                        $allowedUids[] = $key;
-                    }
-                }
-            }
-
-            $emailAuthorized = in_array($email, array_values(array_unique($allowedEmails)), true);
-            $uidAuthorized   = in_array($uid, $allowedUids, true);
-
-            if (!$emailAuthorized && !$uidAuthorized) {
-                Log::warning('Auth rejected: not authorized for station', [
-                    'uid' => $uid, 'email' => $email, 'station' => 'TagumCityCentralFireStation'
+            if (!$matchedStationKey) {
+                Log::warning('Auth rejected: not authorized for any station', [
+                    'uid' => $uid, 'email' => $email
                 ]);
-                return back()->withErrors(['login' => 'You are not authorized for this station.'])->withInput();
+                return back()->withErrors(['login' => 'You are not authorized for any station.'])->withInput();
             }
 
-            // 3) Authorized → persist session
+            // 3) Authorized → persist session bound to the matched station
             Session::put('firebase_user_email', $email);
             Session::put('firebase_user_uid', $uid);
-            Session::put('station', 'TagumCityCentralFireStation');
+            Session::put('station', $matchedStationKey);        // e.g. CapstoneFlare/LaFilipinaFireStation
+            Session::put('station_label', $matchedStationLabel); // e.g. La Filipina Fire Station
 
-            Log::info('Login success', ['uid' => $uid, 'email' => $email, 'station' => 'TagumCityCentralFireStation']);
+            Log::info('Login success', [
+                'uid' => $uid,
+                'email' => $email,
+                'station' => $matchedStationKey
+            ]);
 
             return redirect()->route('incident-reports');
-
         } catch (\Throwable $e) {
             Log::error('Login failed', ['error' => $e->getMessage()]);
             return back()->withErrors(['login' => 'Login failed: ' . $e->getMessage()])->withInput();
@@ -138,6 +159,7 @@ class AuthController extends Controller
         Session::forget('firebase_user_email');
         Session::forget('firebase_user_uid');
         Session::forget('station');
+        Session::forget('station_label');
         return redirect()->route('login');
     }
 }

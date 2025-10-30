@@ -5,7 +5,6 @@
     <h2 id="station-name"></h2>
 
 
-
     {{-- <!-- Dashboard Link (Active when on the dashboard route) -->
     <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
         <img src="{{ asset('images/dashboard.png')}}" alt="Dashboard">Dashboard

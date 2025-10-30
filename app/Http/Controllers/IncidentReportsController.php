@@ -11,19 +11,30 @@ class IncidentReportsController extends Controller
 
     public function index(Request $request)
     {
-        // Require an authenticated session (kept as-is)
+        // Require an authenticated session
         if (!session()->has('firebase_user_email')) {
-            return redirect()->route('login')->with('error', 'You must be logged in to view this page.');
+            return redirect()->route('login')
+                ->with('error', 'You must be logged in to view this page.');
+        }
+
+        // Which station is this session tied to? (set in AuthController)
+        // e.g. "CapstoneFlare/LaFilipinaFireStation"
+        $stationKey   = session('station');
+        $stationLabel = session('station_label') ?: 'Fire Station';
+
+        if (!$stationKey) {
+            return redirect()->route('login')->with('error', 'Missing station context.');
         }
 
         try {
-            // Pull reports from TagumCityCentralFireStation/AllReport structure
-            $fireReports   = $this->firebase->getFireReports('TagumCityCentral');
-            $otherReports  = $this->firebase->getOtherEmergencyReports('TagumCityCentral');
-            $emsReports    = $this->firebase->getEmergencyMedicalServicesReports('TagumCityCentral');
-            $smsReports    = $this->firebase->getSmsReports('TagumCityCentral');
+            // Pull reports from the logged-in station’s AllReport structure
+            // NOTE: $prefix arg is ignored internally but kept for compatibility.
+            $fireReports = $this->firebase->getFireReports($stationKey);
+            $otherReports = $this->firebase->getOtherEmergencyReports($stationKey);
+            $emsReports = $this->firebase->getEmergencyMedicalServicesReports($stationKey);
+            $smsReports = $this->firebase->getSmsReports($stationKey);
 
-            // Sort newest → oldest using robust date/time parsing with fallback to embedded timestamp
+            // Sort newest → oldest (robust date/time parsing, fallback to embedded timestamp)
             $fireReports = collect($fireReports)
                 ->sortByDesc(fn ($r) => $this->toTs($r['date'] ?? null, $r['reportTime'] ?? null, $r['timestamp'] ?? 0))
                 ->values()->all();
@@ -45,10 +56,12 @@ class IncidentReportsController extends Controller
         }
 
         return view('ADMIN-DASHBOARD.incident-reports', [
-            'fireReports'            => $fireReports,
-            'otherEmergencyReports'  => $otherReports,
-            'emsReports'             => $emsReports,
-            'smsReports'             => $smsReports,
+            'stationKey'           => $stationKey,
+            'stationLabel'         => $stationLabel,
+            'fireReports'          => $fireReports,
+            'otherEmergencyReports'=> $otherReports,
+            'emsReports'           => $emsReports,
+            'smsReports'           => $smsReports,
         ]);
     }
 
