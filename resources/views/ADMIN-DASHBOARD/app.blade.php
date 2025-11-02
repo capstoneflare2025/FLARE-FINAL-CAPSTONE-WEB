@@ -134,6 +134,7 @@
           font-size:12px; border-radius:9999px; background:#ef4444; color:#fff; text-align:center; padding:0 5px;
         }
         .msg-badge.hidden{ display:none; }
+
     </style>
 </head>
 <body resetReloadTimer()>

@@ -820,7 +820,10 @@
 = Modal: Details (Fire / Other / EMS / SMS)
 ========================================================= -->
 <div id="detailsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
-  <div class="bg-white rounded-lg p-6 w-full max-w-4xl shadow-lg relative">
+  <div
+  class="bg-white rounded-lg p-6 w-full max-w-4xl overflow-y-auto shadow-lg relative"
+  style="width:95vw; max-height:90vh; overflow-x:hidden;">
+
 
     <h3 class="text-2xl font-semibold text-gray-800 mb-6">Incident Report Details</h3>
 
@@ -833,11 +836,7 @@
         <div class="flex flex-col md:flex-row md:items-start md:space-x-8">
           <!-- LEFT: Text -->
           <div class="flex-1 space-y-2">
-            <div class="flex">
-              <strong class="text-gray-700 w-40 shrink-0">Incident ID:</strong>
-              <span id="detailIncidentId" class="text-gray-600 flex-1 break-words"></span>
-            </div>
-            <br>
+
             <div class="flex">
               <strong class="text-gray-700 w-40 shrink-0">Reporter Name:</strong>
               <span id="detailName" class="text-gray-600 flex-1 break-words"></span>
@@ -873,15 +872,13 @@
               <span id="detailStatus" class="text-gray-600 flex-1 break-words"></span>
             </div>
             <br>
-            <div>
-              <a id="detailFireMapLink" class="text-sm text-blue-600 underline break-all">Open in Maps</a>
-            </div>
+
           </div>
 
           <!-- RIGHT: Photo -->
-          <div class="flex justify-center items-start mt-4 md:mt-0 md:w-[420px]">
-            <div id="detailFirePhoto" class="w-full h-[260px] overflow-hidden rounded-lg shadow">
-              <img id="detailFirePhotoImg" src="" alt="Fire Photo" class="w-full h-full object-cover rounded-lg">
+          <div class="flex justify-center items-start mt-4 md:mt-0 md:w-105 w-full">
+            <div id="detailFirePhoto" class="w-full overflow-hidden rounded-lg shadow" style="max-height:500px;">
+              <img id="detailFirePhotoImg" src="" alt="Fire Photo" class="w-full h-auto object-contain rounded-lg" style="display:block;">
             </div>
           </div>
         </div>
@@ -895,11 +892,7 @@
         <div class="flex flex-col md:flex-row md:items-start md:space-x-8">
           <!-- LEFT: Text -->
           <div class="flex-1 space-y-2">
-            <div class="flex">
-              <strong class="text-gray-700 w-40 shrink-0">Incident ID:</strong>
-              <span id="detailIncidentIdOther" class="text-gray-600 flex-1 break-words"></span>
-            </div>
-            <br>
+
             <div class="flex">
               <strong class="text-gray-700 w-40 shrink-0">Reporter Name:</strong>
               <span id="detailNameOther" class="text-gray-600 flex-1 break-words"></span>
@@ -936,15 +929,13 @@
               <span id="detailStatusOther" class="text-gray-600 flex-1 break-words"></span>
             </div>
             <br>
-            <div>
-              <a id="detailOtherMapLink" class="text-sm text-blue-600 underline break-all">Open in Maps</a>
-            </div>
+
           </div>
 
           <!-- RIGHT: Photo (same size as Fire) -->
-          <div class="flex justify-center items-start mt-4 md:mt-0 md:w-[420px]">
-            <div id="detailOtherPhoto" class="w-full h-[260px] overflow-hidden rounded-lg shadow">
-              <img id="detailOtherPhotoImg" src="" alt="Incident Photo" class="w-full h-full object-cover rounded-lg">
+          <div class="flex justify-center items-start mt-4 md:mt-0 md:w-105 w-full">
+            <div id="detailOtherPhoto" class="w-full overflow-hidden rounded-lg shadow" style="max-height:500px;">
+              <img id="detailOtherPhotoImg" src="" alt="Incident Photo" class="w-full h-auto object-contain rounded-lg" style="display:block;">
             </div>
           </div>
         </div>
@@ -958,11 +949,7 @@
         <div class="flex flex-col md:flex-row md:items-start md:space-x-8">
           <!-- LEFT: Text -->
           <div class="flex-1 space-y-2">
-            <div class="flex">
-              <strong class="text-gray-700 w-40 shrink-0">Incident ID:</strong>
-              <span id="detailIncidentIdEms" class="text-gray-600 flex-1 break-words"></span>
-            </div>
-            <br>
+
             <div class="flex">
               <strong class="text-gray-700 w-40 shrink-0">Reporter Name:</strong>
               <span id="detailNameEms" class="text-gray-600 flex-1 break-words"></span>
@@ -999,15 +986,13 @@
               <span id="detailStatusEms" class="text-gray-600 flex-1 break-words"></span>
             </div>
             <br>
-            <div>
-              <a id="detailEmsMapLink" class="text-sm text-blue-600 underline break-all">Open in Maps</a>
-            </div>
+
           </div>
 
           <!-- RIGHT: Photo (same size as Fire) -->
-          <div class="flex justify-center items-start mt-4 md:mt-0 md:w-[420px]">
-            <div id="detailEmsPhoto" class="w-full h-[260px] overflow-hidden rounded-lg shadow">
-              <img id="detailEmsPhotoImg" src="" alt="EMS Photo" class="w-full h-full object-cover rounded-lg">
+          <div class="flex justify-center items-start mt-4 md:mt-0 md:w-105 w-full">
+            <div id="detailEmsPhoto" class="w-full overflow-hidden rounded-lg shadow" style="max-height:500px;">
+              <img id="detailEmsPhotoImg" src="" alt="EMS Photo"  class="w-full h-auto object-contain rounded-lg" style="display:block;">
             </div>
           </div>
         </div>
@@ -1021,12 +1006,6 @@
 
         <!-- LEFT: Text -->
         <div class="flex-1 space-y-2">
-
-        <div class="flex">
-            <strong class="text-gray-700 w-40 shrink-0">Incident ID:</strong>
-            <span id="detailIncidentIdSms" class="text-gray-600 flex-1 break-words"></span>
-        </div>
-        <br>
 
         <div class="flex">
             <strong class="text-gray-700 w-40 shrink-0">Reporter Name:</strong>
@@ -1132,194 +1111,138 @@ document.addEventListener("DOMContentLoaded", () => {
   renderAllReports();
   safeInitFireFighterAccounts();
   hardLoadFF();
+
+
+
 });
 
 
-/* =========================================================
- * FIRE FIGHTER CHAT: LOAD & LIVE SYNC FROM ACCOUNTS
- * Path: TagumCityCentralFireStation/FireFighter/AllFireFighterAccount
- * ========================================================= */
 
 /* =========================================================
- * FIRE FIGHTER CHAT TABLE
- * Shows the 3 known accounts:
- *   MabiniFireFighterAccount
- *   LaFilipinaFireFighterAccount
- *   CanocotanFireFighterAccount
- * Path: TagumCityCentralFireStation/FireFighter/AllFireFighterAccount
+ * FIRE FIGHTER CHAT — PER-STATION (matches your latest RTDB)
+ * Node shape used everywhere:
+ *   <root>/FireFighter/FireFighterAccount
+ *     ├─ AdminMessages
+ *     ├─ AllReport/<FireReport|OtherEmergencyReport|EmergencyMedicalServicesReport|SmsReport>/<id>
+ *     └─ LiveLocation { latitude, longitude, updatedAt, ... }
  * ========================================================= */
 
+window.CURRENT_STATION_ROOT  = @json(session('station'));        // e.g. "CapstoneFlare/CanocotanFireStation"
+window.CURRENT_STATION_LABEL = @json(session('station_label'));  // e.g. "Canocotan Fire Station"
+window.AUTH_EMAIL            = @json(session('firebase_user_email'));
 
-// Station context under CapstoneFlare
+/* -------- Constant paths -------- */
+const STATION_ROOT       = window.CURRENT_STATION_ROOT;
+const FF_ACCOUNT_PATH    = `${STATION_ROOT}/FireFighter/FireFighterAccount`;   // <-- single account node
+const HQ_PROFILE_PATH    = `${STATION_ROOT}/Profile`;
+const ADMIN_MESSAGES     = `${FF_ACCOUNT_PATH}/AdminMessages`;
+const LIVE_LOCATION_PATH = `${FF_ACCOUNT_PATH}/LiveLocation`;
 
- window.AUTH_EMAIL = @json(session('firebase_user_email'));
-  window.CURRENT_STATION_ROOT = @json(session('station'));       // e.g. "CapstoneFlare/LaFilipinaFireStation"
-  window.CURRENT_STATION_LABEL = @json(session('station_label')); // e.g. "La Filipina Fire Station"
+const REPORT_TYPES = [
+  'FireReport',
+  'OtherEmergencyReport',
+  'EmergencyMedicalServicesReport',
+  'SmsReport'
+];
 
-  // Derive the firefighter account key from the station root
-  (function deriveFFKey() {
-    const root = window.CURRENT_STATION_ROOT || '';
-    const last = root.split('/').filter(Boolean).pop();
+/* -------- DOM helpers -------- */
+const _$ = id => document.getElementById(id);
+const _show = id => _$ (id)?.classList.remove('hidden');
+const _hide = id => _$ (id)?.classList.add('hidden');
+const _safe = (v, d='N/A') => (v==null || String(v).trim()==='') ? d : String(v);
 
-    const map = {
-      CanocotanFireStation:  'CanocotanFireFighterAccount',
-      LaFilipinaFireStation: 'LaFilipinaFireFighterAccount',
-      MabiniFireStation:     'MabiniFireFighterAccount'
-    };
-
-    window.CURRENT_FF_ACCOUNT_KEY = map[last] || '';  // 👈 this is what receive() needs
-  })();
-
-const CURRENT_STATION_ROOT =
-  (typeof window !== 'undefined' && window.CURRENT_STATION_ROOT) ||
-  'CapstoneFlare/CanocotanFireStation'; // last-resort fallback
-
-
-const HQ_PROFILE_PATH   = `${CURRENT_STATION_ROOT}/Profile`;
-const FIREFIGHTER_PATH  = `${CURRENT_STATION_ROOT}/FireFighter/FireFighterAccount`;   // 👈 matches your screenshot
-const FF_ACCOUNTS_BASE  = FIREFIGHTER_PATH;
-
-
-const ADMIN_MESSAGES = 'AdminMessages';
-const UNREAD_VALUE   = true;   // we treat true = unread, false = read
-
-
-function _el(id){ return document.getElementById(id); }
-function _show(id){ _el(id)?.classList.remove('hidden'); }
-function _hide(id){ _el(id)?.classList.add('hidden'); }
-function _safe(v, d='N/A'){ return (v==null || String(v).trim()==='') ? d : String(v); }
-
-/* ---------- HQ coords helper (from Profile) ---------- */
+/* =========================================================
+ * HQ coords
+ * ========================================================= */
 async function getHQCoords(){
   const s = await firebase.database().ref(HQ_PROFILE_PATH).once('value');
   const p = s.val() || {};
   const lat = parseFloat(p.latitude);
   const lng = parseFloat(p.longitude);
-  return (Number.isFinite(lat) && Number.isFinite(lng)) ? { lat, lng, raw: p } : null;
+  return (Number.isFinite(lat) && Number.isFinite(lng)) ? { lat, lng } : null;
 }
 
-/* ---------- table load (single source of truth; no duplicate icons) ---------- */
-function loadAllFireFighterAccounts() {
-  const body = _el('fireFighterChatBody');
+/* =========================================================
+ * TABLE — single row for this station’s FireFighterAccount
+ * ========================================================= */
+function loadFireFighterAccountRow() {
+  const body = _$('fireFighterChatBody');
   if (!body) return;
 
-  if (!window.firebase || !firebase.apps?.length || typeof firebase.database !== 'function') {
-    setTimeout(loadAllFireFighterAccounts, 500);
+  if (!firebase?.apps?.length || typeof firebase.database !== 'function') {
+    setTimeout(loadFireFighterAccountRow, 400);
     return;
   }
 
-  // Clear before rendering to avoid any duplicate rows
-  body.innerHTML = '';
-
-
-  firebase.database().ref(FIREFIGHTER_PATH).once('value')
+  firebase.database().ref(FF_ACCOUNT_PATH).once('value')
     .then(snap => {
       if (!snap.exists()) {
         body.innerHTML = `
-          <tr>
-            <td colspan="4" class="px-4 py-3 text-center text-gray-500">
-              No firefighter accounts found.
-            </td>
-          </tr>`;
+          <tr><td colspan="4" class="px-4 py-3 text-center text-gray-500">
+            Firefighter account not found for this station.
+          </td></tr>`;
         return;
       }
+      const v = snap.val() || {};
+      const name    = _safe(v.name, 'FireFighterAccount');
+      const contact = _safe(v.contact);
 
-      const data = snap.val() || {};
-      const STATIONS = [
-        'MabiniFireFighterAccount',
-        'LaFilipinaFireFighterAccount',
-        'CanocotanFireFighterAccount'
-      ];
-
-      const rows = STATIONS.map((key, i) => {
-        const v = data[key] || {};
-        const name    = v.name    || key;
-        const contact = v.contact || 'N/A';
-
-            return `
+      body.innerHTML = `
         <tr class="border-b fire-fighter-row">
-        <td class="px-4 py-2">${i + 1}</td>
-        <td class="px-4 py-2 name-cell">${name}</td>
-        <td class="px-4 py-2 contact-cell">${contact}</td>
-        <td class="px-4 py-2 space-x-3 flex items-center">
-
-            <!-- Message (envelope) -->
+          <td class="px-4 py-2">1</td>
+          <td class="px-4 py-2 name-cell">${name}</td>
+          <td class="px-4 py-2 contact-cell">${contact}</td>
+          <td class="px-4 py-2 space-x-3 flex items-center">
+            <!-- Message -->
             <a href="javascript:void(0);" title="Message"
-            class="inline-flex items-center msg-btn"
-            data-key="fireFighterChatReports|${key}"
-            onclick="openFFChatMessageModal('${key}')">
-            <img src="{{ asset('images/message.png') }}" alt="Message" class="w-6 h-6">
-            <span class="msg-badge hidden">0</span>
+               class="inline-flex items-center msg-btn"
+               onclick="openFFChatMessageModal()">
+              <img src="/images/message.png" alt="Message" class="w-6 h-6">
+              <span class="msg-badge hidden">0</span>
             </a>
-
-            <!-- Location (pin) -->
+            <!-- Location -->
             <a href="javascript:void(0);" title="Location"
-            class="inline-flex items-center"
-            onclick="openFFChatLocationModal('${key}')">
-            <img src="{{ asset('images/location.png') }}" alt="Location" class="w-6 h-6">
+               class="inline-flex items-center"
+               onclick="openFFChatLocationModal()">
+              <img src="/images/location.png" alt="Location" class="w-6 h-6">
             </a>
-
-            <!-- Details (document) -->
+            <!-- Details -->
             <a href="javascript:void(0);" title="Details"
-            class="inline-flex items-center"
-            onclick="openFFChatDetailsModal('${key}')">
-            <img src="{{ asset('images/details.png') }}" alt="Details" class="w-6 h-6">
+               class="inline-flex items-center"
+               onclick="openFFChatDetailsModal()">
+              <img src="/images/details.png" alt="Details" class="w-6 h-6">
             </a>
-        </td>
+          </td>
         </tr>`;
 
-    }).join('');
-
-      body.innerHTML = rows || `
-        <tr><td colspan="4" class="px-4 py-3 text-center text-gray-500">
-          No firefighter accounts found.
-        </td></tr>`;
-
-        initFFChatUnreadBadges();   // start live counters
-
-        // and also once on DOMContentLoaded (covers any Blade-rendered rows on first paint)
-        document.addEventListener('DOMContentLoaded', initFFChatUnreadBadges);
-
+      initUnreadBadge();                            // live unread count
+      document.addEventListener('DOMContentLoaded', initUnreadBadge);
     })
     .catch(err => {
       console.error('[FF] Read error:', err);
-      const msg = err?.code === 'PERMISSION_DENIED'
-        ? 'Permission denied by Firebase rules.'
-        : (err?.message || 'Error reading data.');
       body.innerHTML = `
-        <tr>
-          <td colspan="4" class="px-4 py-3 text-center text-red-600">${msg}</td>
-        </tr>`;
+        <tr><td colspan="4" class="px-4 py-3 text-center text-red-600">
+          ${err?.message || 'Error reading data.'}
+        </td></tr>`;
     });
 }
 
+/* Live unread badge (firefighter→admin messages: isRead === true && sender != 'admin') */
+function initUnreadBadge() {
+  const badge = document.querySelector('#fireFighterChatBody .msg-badge');
+  if (!badge) return;
 
-function getAccountKeyFromRow(btn){
-  // data-key shape: "fireFighterChatReports|{AccountKey}"
-  const raw = btn.getAttribute('data-key') || '';
-  return raw.split('|')[1] || null;
-}
-
-// Attach a listener per station that counts admin unread (isRead === true)
-function initFFChatUnreadBadges() {
-  document.querySelectorAll('#fireFighterChatBody .msg-btn').forEach(btn => {
-    const accountKey = getAccountKeyFromRow(btn);
-    const badge = btn.querySelector('.msg-badge');
-    if (!accountKey || !badge) return;
-
-    const ref = firebase.database()
-      .ref(`${FF_ACCOUNTS_BASE}/${accountKey}/${ADMIN_MESSAGES}`)
-      .orderByChild('isRead')
-      .equalTo(true); // first filter: unread only
-
-    ref.on('value', snap => {
+  firebase.database()
+    .ref(ADMIN_MESSAGES)
+    .orderByChild('isRead')
+    .equalTo(true)
+    .on('value', snap => {
       let count = 0;
       snap.forEach(c => {
         const m = c.val() || {};
         const sender = String(m.sender || '').toLowerCase();
-        if (sender !== 'admin') count++;  // second filter: not admin
+        if (sender !== 'admin') count++;
       });
-
       if (count > 0) {
         badge.textContent = count > 99 ? '99+' : String(count);
         badge.classList.remove('hidden');
@@ -1327,25 +1250,20 @@ function initFFChatUnreadBadges() {
         badge.classList.add('hidden');
       }
     });
-  });
 }
 
-
-/* ---------- DETAILS MODAL ---------- */
-// Pull one station object
-function getFFStation(key){
-  return firebase.database().ref(`${FF_ACCOUNTS_BASE}/${key}`).once('value')
-    .then(s => ({ key, ...(s.val() || {}) }));
-}
-
-async function openFFChatDetailsModal(stationKey){
+/* =========================================================
+ * DETAILS MODAL
+ * ========================================================= */
+async function openFFChatDetailsModal(){
   try{
-    const st = await getFFStation(stationKey);
-    _el('ffChatDetKey').textContent     = stationKey;
-    _el('ffChatDetName').textContent    = _safe(st.name, stationKey);
-    _el('ffChatDetContact').textContent = _safe(st.contact);
-    _el('ffChatDetEmail').textContent   = _safe(st.email, '—');
-    _el('ffChatDetExtra').textContent   = st.notes ? String(st.notes) : '';
+    const s = await firebase.database().ref(FF_ACCOUNT_PATH).once('value');
+    const v = s.val() || {};
+    _$('#ffChatDetKey')      && (_$('#ffChatDetKey').textContent      = 'FireFighterAccount');
+    _$('#ffChatDetName')     && (_$('#ffChatDetName').textContent     = _safe(v.name,'FireFighterAccount'));
+    _$('#ffChatDetContact')  && (_$('#ffChatDetContact').textContent  = _safe(v.contact));
+    _$('#ffChatDetEmail')    && (_$('#ffChatDetEmail').textContent    = _safe(v.email,'—'));
+    _$('#ffChatDetExtra')    && (_$('#ffChatDetExtra').textContent    = v.notes ? String(v.notes) : '');
     _show('ffChatDetailsModal');
   } catch(e){
     console.error('[FF Chat][Details] load failed', e);
@@ -1354,431 +1272,375 @@ async function openFFChatDetailsModal(stationKey){
 }
 function closeFFChatDetailsModal(){ _hide('ffChatDetailsModal'); }
 
-/* ---------- MESSAGE MODAL (simple live thread) ---------- */
-/* ---------- MESSAGE MODAL (text / image / audio) ---------- */
-/* ---------- MESSAGE MODAL (text / image / audio) ---------- */
+/* =========================
+ * Messaging (single renderer)
+ * ========================= */
+let __threadRef = null;
+const _el = id => document.getElementById(id);
+// const _safe = (v, d='N/A') => (v==null || String(v).trim()==='') ? d : String(v);
 
-
-function renderFFChatThread(list = []) {
+/* One renderer with date headers (your original, cleaned a hair) */
+function renderThread(items){
   const box = _el('ffChatMsgThread');
+  if (!box) return;
 
-  const esc = (s='') => s.replace(/[&<>"']/g, c => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[c]));
-
-  // Formatters
+  const esc = (s='') => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const pad = n => String(n).padStart(2,'0');
   const MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-  const fmtFull = ms => {
-    const d = new Date(ms);
-    return `${MONTHS[d.getMonth()]} ${pad(d.getDate())} ${d.getFullYear()} - ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  };
-  const fmtTime = ms => {
-    const d = new Date(ms);
-    return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  };
+  const fmtFull = ms => { const d=new Date(ms); return `${MONTHS[d.getMonth()]} ${pad(d.getDate())} ${d.getFullYear()} - ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+  const fmtTime = ms => { const d=new Date(ms); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+  const SIX = 6*60*60*1000;
+  const newDay = (a,b)=>{const A=new Date(a),B=new Date(b);return A.toDateString()!==B.toDateString();};
 
-  // Show a full header if gap ≥ 6h or date changed
-  const SIX_HOURS = 6 * 60 * 60 * 1000;
-  const isNewDay = (a,b) => {
-    const da = new Date(a), db = new Date(b);
-    return da.getFullYear()!==db.getFullYear() || da.getMonth()!==db.getMonth() || da.getDate()!==db.getDate();
-  };
-  const shouldHeader = (lastHeaderTs, curTs) =>
-    lastHeaderTs===null || (curTs - lastHeaderTs) >= SIX_HOURS || isNewDay(lastHeaderTs, curTs);
-
-  const bubbleBody = (m) => {
-    if (m.text && m.text.trim().length) {
-      return `<div class="whitespace-pre-wrap break-words">${esc(m.text)}</div>`;
-    }
-    if (m.imageBase64 && m.imageBase64.length) {
-      return `
-        <a href="data:image/jpeg;base64,${m.imageBase64}" target="_blank" rel="noopener">
-          <img
-            src="data:image/jpeg;base64,${m.imageBase64}"
-            alt="image"
-            style="
-              display:block;
-              width: 260px;
-              max-width: 100%;
-              height: auto;
-              max-height: 700px;
-              object-fit: cover;
-              border-radius: 8px;
-            "
-            loading="lazy"
-          />
-        </a>`;
-    }
-    if (m.audioBase64 && m.audioBase64.length) {
-      return `
-        <div class="flex items-center gap-2">
-          <audio controls preload="metadata"
-                 src="data:audio/mp4;base64,${m.audioBase64}"
-                 class="h-9 w-[220px]"></audio>
-          <span class="text-xs opacity-80"></span>
-        </div>`;
-    }
+  const body = m => {
+    if ((m.text||'').trim()) return `<div class="whitespace-pre-wrap break-words">${esc(m.text)}</div>`;
+    if (m.imageBase64)        return `<a href="data:image/jpeg;base64,${m.imageBase64}" target="_blank" rel="noopener">
+                                        <img src="data:image/jpeg;base64,${m.imageBase64}"
+                                             style="display:block;width:260px;max-width:100%;height:auto;max-height:700px;object-fit:cover;border-radius:8px"/>
+                                      </a>`;
+    if (m.audioBase64)        return `<audio controls preload="metadata" src="data:audio/mp4;base64,${m.audioBase64}" class="h-9 w-[220px]"></audio>`;
     return `<em class="opacity-70">Unsupported/empty message</em>`;
   };
 
-  // Build with headers
-  let lastHeaderTs = null;
-  const html = (list || [])
+  let lastHeader=null;
+  const html = (items||[])
     .sort((a,b)=>(a.timestamp||0)-(b.timestamp||0))
-    .map(m => {
+    .map(m=>{
       const ts = m.timestamp || Date.now();
-      const fromAdmin = m.sender === 'admin';
-      const header = shouldHeader(lastHeaderTs, ts)
-        ? `<div class="text-center my-3">
-             <span class="inline-block text-xs px-3 py-1 rounded-full bg-gray-200 text-gray-700">
-               ${fmtFull(ts)}
-             </span>
-           </div>`
-        : '';
-      if (header) lastHeaderTs = ts;
+      const header = (!lastHeader || (ts-lastHeader)>=SIX || newDay(ts,lastHeader))
+        ? `<div class="text-center my-3"><span class="inline-block text-xs px-3 py-1 rounded-full bg-gray-200 text-gray-700">${fmtFull(ts)}</span></div>` : '';
+      if (header) lastHeader = ts;
 
-      return `
-        ${header}
+      const fromAdmin = String(m.sender||'').toLowerCase()==='admin';
+      return `${header}
         <div class="mb-2 ${fromAdmin ? 'text-right' : ''}">
-          <div class="inline-block px-3 py-2 rounded ${fromAdmin ? 'bg-blue-600 text-white' : 'bg-gray-200'}"
-               style="max-width: 75%;">
-            ${bubbleBody(m)}
-          </div>
+          <div class="inline-block px-3 py-2 rounded ${fromAdmin ? 'bg-blue-600 text-white' : 'bg-gray-200'}" style="max-width:75%;">${body(m)}</div>
           <div class="text-xs text-gray-500 mt-1">${fmtTime(ts)}</div>
         </div>`;
-    }).join('');
+    })
+    .join('');
 
-  box.innerHTML = html;
+  box.innerHTML = html || `<em class="text-gray-500">No messages yet.</em>`;
   box.scrollTop = box.scrollHeight;
 }
 
-
-
-let __ffChatUnsub = null;
-
-
-async function openFFChatMessageModal(stationKey){
-  const nameSpan = _el('ffChatMsgStationName');
-  const inputKey = _el('ffChatMsgStationKey');
-  const thread   = _el('ffChatMsgThread');
-
+/* Open modal: single listener ordered by timestamp, appends to array */
+async function openFFChatMessageModal(){
   try{
-    const st = await getFFStation(stationKey);
-    nameSpan.textContent = _safe(st.name, stationKey);
-    inputKey.value = stationKey;
+    if (!firebase?.apps?.length || typeof firebase.database !== 'function')
+      throw new Error('Firebase not initialized yet.');
+
+    const modal  = _el('ffChatMessageModal');
+    const nameEl = _el('ffChatMsgStationName');
+    const thread = _el('ffChatMsgThread');
+    if (!modal || !nameEl || !thread) throw new Error('Chat modal elements missing.');
+
+    // Station name
+    const accSnap = await firebase.database().ref(FF_ACCOUNT_PATH).once('value');
+    nameEl.textContent = _safe((accSnap.val()||{}).name, 'FireFighterAccount');
+
+    // Show modal
+    modal.classList.remove('hidden');
     thread.innerHTML = '<em class="text-gray-500">Loading messages…</em>';
-    _show('ffChatMessageModal');
 
-    // Cancel previous listener if any
-    if (__ffChatUnsub && typeof __ffChatUnsub.off === 'function') {
-      __ffChatUnsub.off();
-      __ffChatUnsub = null;
-    }
+    // Clean old listener
+    if (__threadRef) { try{ __threadRef.off(); }catch(_){} __threadRef = null; }
 
-    const ref = firebase.database().ref(`${FF_ACCOUNTS_BASE}/${stationKey}/AdminMessages`);
+    const ref = firebase.database().ref(ADMIN_MESSAGES).orderByChild('timestamp');
+    __threadRef = ref;
 
-        // Mark all currently-unread admin messages as read
-       try {
-    const adminRef = firebase.database()
-        .ref(`${FF_ACCOUNTS_BASE}/${stationKey}/${ADMIN_MESSAGES}`);
-
-    const unreadSnap = await adminRef.orderByChild('isRead').equalTo(true).once('value');
-
-    if (unreadSnap.exists()) {
-        const updates = {};
-        unreadSnap.forEach(c => {
-        const m = c.val() || {};
-        const sender = String(m.sender || '').toLowerCase();
-        if (sender !== 'admin') {                 // only firefighter messages
-            updates[`${c.key}/isRead`] = false;     // mark read
-        }
+    // Mark firefighter→admin messages as read (isRead: true -> false) once
+    try{
+      const unread = await firebase.database().ref(ADMIN_MESSAGES).orderByChild('isRead').equalTo(true).once('value');
+      if (unread.exists()) {
+        const up = {};
+        unread.forEach(c=>{
+          const m = c.val()||{};
+          if (String(m.sender||'').toLowerCase()!=='admin') up[`${c.key}/isRead`] = false;
         });
-        if (Object.keys(updates).length) await adminRef.update(updates);
-    }
-    } catch (e) {
-    console.warn('[FF Chat] mark-as-read failed:', e);
-    }
+        if (Object.keys(up).length) await firebase.database().ref(ADMIN_MESSAGES).update(up);
+      }
+    }catch(e){ console.warn('[FF Chat] mark-read failed:', e); }
 
-
-
-    const snapshotToArray = (snap) => {
-    const out = [];
-    snap.forEach(c => {
-        const message = c.val() || {};
-        console.log('Raw message:', message);  // Log individual messages before sorting
-        out.push({ id: c.key, ...message });
+    // Stream messages in order
+    const buf = [];
+    ref.on('child_added', snap => {
+      buf.push({ id: snap.key, ...(snap.val()||{}) });
+      renderThread(buf);
     });
-    out.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-    console.log('Sorted messages:', out);  // Log sorted messages to check order
-    return out;
-    };
 
+    // Also refresh on edits
+    ref.on('child_changed', snap => {
+      const i = buf.findIndex(m=>m.id===snap.key);
+      if (i>=0) { buf[i] = { id: snap.key, ...(snap.val()||{}) }; renderThread(buf); }
+    });
 
-    // initial + live
-    const init = await ref.once('value');
-    renderFFChatThread(snapshotToArray(init));
-
-    ref.on('value', s => renderFFChatThread(snapshotToArray(s)));
-    __ffChatUnsub = ref;
-
-  } catch(e){
-    console.error('[FF Chat][Message] open failed', e);
-    alert('Could not open messages.');
+  } catch (err) {
+    console.error('[FF Chat][Message] open failed', err);
+    alert(err?.message || 'Could not open messages.');
   }
 }
 
 function closeFFChatMessageModal(){
-  if (__ffChatUnsub && typeof __ffChatUnsub.off === 'function') {
-    __ffChatUnsub.off();
-    __ffChatUnsub = null;
-  }
-  _hide('ffChatMessageModal');
+  try { if (__threadRef) __threadRef.off(); } catch(_) {}
+  __threadRef = null;
+  _el('ffChatMessageModal')?.classList.add('hidden');
 }
 
-// send
-(() => {
-  const form = document.getElementById('ffChatMsgForm');
-  if (!form) return;
-  form.addEventListener('submit', async (e) => {
+/* Send admin text */
+(()=>{
+  const form  = document.getElementById('ffChatMsgForm');
+  const input = document.getElementById('ffChatMsgInput');
+  if (!form || !input) return;
+
+  form.addEventListener('submit', async e=>{
     e.preventDefault();
-    const key  = _el('ffChatMsgStationKey').value;
-    const text = _el('ffChatMsgInput').value.trim();
-    if (!key || !text) return;
+    const text = input.value.trim();
+    if (!text) return;
 
-    try {
-      const now = new Date();
-      const pad = n => String(n).padStart(2, '0');
-      const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`; // YYYY-MM-DD
-      const time = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`; // HH:mm:ss (24h)
+    try{
+      if (!firebase?.apps?.length || typeof firebase.database !== 'function')
+        throw new Error('Firebase not initialized yet.');
 
-      const ref = firebase.database().ref(`${FF_ACCOUNTS_BASE}/${key}/AdminMessages`).push();
-      await ref.set({
+      const now = new Date(), pad=n=>String(n).padStart(2,'0');
+      const date = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+      const time = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+      await firebase.database().ref(ADMIN_MESSAGES).push({
         sender: 'admin',
         text,
         timestamp: now.getTime(),
-        date,
-        time,
-        isRead: false  // 👈 added default unread flag
+        date, time,
+        isRead: false
       });
 
-      _el('ffChatMsgInput').value = '';
-    } catch (err) {
+      input.value = '';
+    }catch(err){
       console.error('[FF Chat][Message] send failed', err);
-      alert('Send failed.');
+      alert(err?.message || 'Send failed.');
     }
   });
 })();
 
 
+
 /* =========================================================
- * EMAIL → STATION & LIVE GEO WRITE (for firefighter logins)
+ * GEO WRITE (for firefighter browsers only) -> LiveLocation
+ * If your admins use this UI, this block will effectively no-op.
  * ========================================================= */
-const EMAIL_TO_STATION = {
-  'tcwestfiresubstation@gmail.com':     'MabiniFireFighterAccount',
-  'lafilipinafire@gmail.com': 'LaFilipinaFireFighterAccount',
-  'bfp_tagumcity@yahoo.com':  'CanocotanFireFighterAccount'
+const EMAIL_TO_IS_FIREFIGHTER = {
+  'tcwfssff123@gmail.com': true,
+  'lffssff123@gmail.com':  true,
+  'tccfsff123@gmail.com':  true
 };
 
-function stationKeyFromEmail(email){
-  if(!email) return null;
-  const key = EMAIL_TO_STATION[email.trim().toLowerCase()];
-  return key || null;
-}
-
 let __geoWatchId = null;
-
-function startFirefighterLocationTracking() {
-  const email = window.AUTH_EMAIL || null;  // set this from your backend session
-  const stationKey = stationKeyFromEmail(email);
-  if (!stationKey) return; // not a firefighter → no tracking
-
-  if (!('geolocation' in navigator)) {
-    console.warn('[geo] Browser has no Geolocation API');
-    return;
-  }
+function startFirefighterLocationTracking(){
+  const email = (window.AUTH_EMAIL||'').toLowerCase();
+  if (!EMAIL_TO_IS_FIREFIGHTER[email]) return; // only FF browsers push LiveLocation
+  if (!('geolocation' in navigator)) return;
 
   __geoWatchId = navigator.geolocation.watchPosition(
-    pos => {
-      const { latitude, longitude, accuracy, heading, speed } = pos.coords || {};
+    pos=>{
+      const { latitude, longitude, accuracy, heading, speed } = pos.coords||{};
       const payload = {
         latitude, longitude,
-        accuracy: Number.isFinite(accuracy) ? accuracy : null,
-        heading:  Number.isFinite(heading)  ? heading  : null,
-        speed:    Number.isFinite(speed)    ? speed    : null,
+        accuracy: Number.isFinite(accuracy)?accuracy:null,
+        heading:  Number.isFinite(heading)?heading:null,
+        speed:    Number.isFinite(speed)?speed:null,
         updatedAt: Date.now()
       };
-
-      firebase.database()
-        .ref(`${FF_ACCOUNTS_BASE}/${stationKey}/liveLocation`)
-        .set(payload)
-        .catch(err => console.error('[geo] write failed:', err));
+      firebase.database().ref(LIVE_LOCATION_PATH).set(payload).catch(e=>console.error('[geo] set failed', e));
     },
-    err => {
-      console.warn('[geo] watchPosition error:', err);
-      // fallback one-shot
-      navigator.geolocation.getCurrentPosition(p => {
-        const { latitude, longitude, accuracy } = p.coords || {};
-        firebase.database()
-          .ref(`${FF_ACCOUNTS_BASE}/${stationKey}/liveLocation`)
-          .set({ latitude, longitude, accuracy, updatedAt: Date.now() })
-          .catch(e => console.error('[geo] oneshot write failed:', e));
-      }, () => {}, { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 });
+    err=>{
+      console.warn('[geo] watch error', err);
+      navigator.geolocation.getCurrentPosition(p=>{
+        const { latitude, longitude, accuracy } = p.coords||{};
+        firebase.database().ref(LIVE_LOCATION_PATH).set({
+          latitude, longitude, accuracy, updatedAt: Date.now()
+        }).catch(e=>console.error('[geo] oneshot failed', e));
+      }, ()=>{}, { enableHighAccuracy:true, timeout:8000, maximumAge:0 });
     },
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+    { enableHighAccuracy:true, timeout:15000, maximumAge:5000 }
   );
 }
-
-function stopFirefighterLocationTracking(){
-  try { if (__geoWatchId != null) navigator.geolocation.clearWatch(__geoWatchId); }
-  catch(_) {}
-  __geoWatchId = null;
-}
-
-// keep this call (no extra DOMContentLoaded is added)
+function stopFirefighterLocationTracking(){ try{ if(__geoWatchId!=null) navigator.geolocation.clearWatch(__geoWatchId); }catch(_){} __geoWatchId=null; }
 startFirefighterLocationTracking();
 
 /* =========================================================
- * LOCATION MODAL — Leaflet live map (station + HQ via Profile)
+ * LOCATION MODAL — Leaflet: LiveLocation + HQ + Ongoing coords
  * ========================================================= */
+let __map=null, __mapForStation=true; // single-station view
+let __ffMarker=null, __hqMarker=null, __liveRef=null, __reportMarkers=[];
 
-function getIcons() {
+function stopLiveListener(){ try{ __liveRef && __liveRef.off(); }catch(_){} __liveRef=null; }
+
+function getIcons(){
   return {
-    station: L.icon({
-      iconUrl: '/images/fire-truck.png',
-      iconSize: [40, 40],
-      iconAnchor: [20, 40],
-      popupAnchor: [0, -35]
-    }),
-    hq: L.icon({
-      iconUrl: '/images/fire-station.png',
-      iconSize: [42, 42],
-      iconAnchor: [21, 42],
-      popupAnchor: [0, -35]
-    })
+    station: L.icon({ iconUrl:'/images/fire-truck.png', iconSize:[40,40], iconAnchor:[20,40], popupAnchor:[0,-35] }),
+    hq:      L.icon({ iconUrl:'/images/fire-station.png', iconSize:[42,42], iconAnchor:[21,42], popupAnchor:[0,-35] }),
+    report:  L.icon({ iconUrl:'/images/current_location.png', iconSize:[34,34], iconAnchor:[17,34], popupAnchor:[0,-30] })
   };
 }
 
-// State
-let __ffMap = null;
-let __ffMapInitedForKey = null;
-let __ffStationMarker = null;
-let __ffStationLiveRef = null;
-let __hqMarker = null;
-
-// listeners
-function stopStationFirebaseListeners() {
-  try { __ffStationLiveRef && __ffStationLiveRef.off(); } catch(_) {}
-  __ffStationLiveRef = null;
+async function fetchOngoingReportCoords(){
+  const base = `${FF_ACCOUNT_PATH}/AllReport`;
+  const db = firebase.database();
+  const out = [];
+  for (const type of REPORT_TYPES) {
+    const snap = await db.ref(`${base}/${type}`).once('value');
+    if (!snap.exists()) continue;
+    snap.forEach(c=>{
+      const v=c.val()||{};
+      const status = String(v.status||'').replace(/-/g,'').toLowerCase();
+      if (status==='ongoing') {
+        const lat = parseFloat(v.latitude ?? v.lat);
+        const lng = parseFloat(v.longitude ?? v.lng);
+        if (Number.isFinite(lat) && Number.isFinite(lng)) out.push({ type, id:c.key, lat, lng });
+      }
+    });
+  }
+  return out;
 }
 
-/* Live-only listener */
-function startStationLiveListener(stationKey, onUpdate) {
-  stopStationFirebaseListeners();
-  const ref = firebase.database().ref(`${FF_ACCOUNTS_BASE}/${stationKey}/liveLocation`);
-  __ffStationLiveRef = ref;
 
-  ref.on('value', snap => {
-    const v = snap.val() || {};
-    const lat = parseFloat(v.latitude);
-    const lng = parseFloat(v.longitude);
-    if (Number.isFinite(lat) && Number.isFinite(lng)) {
-      onUpdate({ lat, lng, updatedAt: v.updatedAt || null });
-    } else {
-      console.warn('[liveLocation] invalid lat/lng', v);
-    }
-  }, err => console.error('[liveLocation] listener error:', err));
+// tiny helper: wait for an element to exist (max ~1s)
+function waitEl(id, tries = 20, delay = 50) {
+  return new Promise((resolve, reject) => {
+    let n = 0;
+    (function tick(){
+      const el = document.getElementById(id);
+      if (el) return resolve(el);
+      if (++n > tries) return reject(new Error(`#${id} not found`));
+      setTimeout(tick, delay);
+    })();
+  });
 }
 
-/* ---------- OPEN / CLOSE ---------- */
-async function openFFChatLocationModal(stationKey){
+async function openFFChatLocationModal(){
   try{
     _show('ffChatLocationModal');
-    _el('ffChatLocStationName').textContent = stationKey;
 
-    const info  = _el('ffChatLocationInfo');
-    const mapEl = _el('ffChatLocationMap');
+    // ensure required elements actually exist (and create info div if missing)
+    const modal = await waitEl('ffChatLocationModal');
+    const mapEl = await waitEl('ffChatLocationMap');
+    let info   = document.getElementById('ffChatLocationInfo');
+    if (!info) {
+      // create the info block just above the map if template omitted it
+      info = document.createElement('div');
+      info.id = 'ffChatLocationInfo';
+      info.className = 'text-gray-700 mb-4';
+      mapEl.parentNode.insertBefore(info, mapEl);
+    }
+
+    const nameSpan = document.getElementById('ffChatLocStationName');
+    if (nameSpan) nameSpan.textContent = window.CURRENT_STATION_LABEL || 'Station';
+
     info.innerHTML = '<span class="text-gray-500">Loading…</span>';
 
     if (!window.L) { info.textContent = 'Leaflet not loaded.'; return; }
 
-    const { station: ICON_STATION, hq: ICON_HQ } = getIcons();
+    const ICONS = getIcons();
 
-    if (!__ffMap) {
-      __ffMap = L.map(mapEl, { zoomControl: true, attributionControl: true });
+    // init (once) Leaflet map
+    if (!__map) {
+      __map = L.map(mapEl, { zoomControl:true, attributionControl:true });
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(__ffMap);
+      }).addTo(__map);
     }
 
-    if (__ffMapInitedForKey !== stationKey) {
-      __ffMapInitedForKey = stationKey;
-      if (__ffStationMarker) { __ffStationMarker.remove(); __ffStationMarker = null; }
-    }
+    // clear previous report markers
+    __reportMarkers.forEach(m => m.remove());
+    __reportMarkers = [];
 
     // HQ marker
     const hq = await getHQCoords();
     let hqHTML = '';
     if (hq && Number.isFinite(hq.lat) && Number.isFinite(hq.lng)) {
       if (!__hqMarker) {
-        __hqMarker = L.marker([hq.lat, hq.lng], { icon: ICON_HQ })
-          .addTo(__ffMap)
-          .bindPopup('<b>Tagum City Central Fire Station (HQ)</b>');
+        __hqMarker = L.marker([hq.lat, hq.lng], { icon: ICONS.hq })
+          .addTo(__map)
+          .bindPopup(`<b>${_safe(window.CURRENT_STATION_LABEL,'HQ')}</b>`);
       } else {
         __hqMarker.setLatLng([hq.lat, hq.lng]);
       }
       hqHTML = `
         <div class="mt-2 border-t border-gray-300 pt-1">
-          <strong>Headquarters:</strong> Tagum City Central Fire Station<br>
+          <strong>Headquarters:</strong> ${_safe(window.CURRENT_STATION_LABEL,'HQ')}<br>
           <span class="text-sm text-gray-600">
             Latitude: ${hq.lat.toFixed(6)}, Longitude: ${hq.lng.toFixed(6)}
           </span>
         </div>`;
     }
 
-    // fit helper (use inside live callback)
-    function fitToBoth(lat, lng) {
-      const bounds = L.latLngBounds([]);
-      bounds.extend([lat, lng]);                       // firefighter
-      if (__hqMarker) bounds.extend(__hqMarker.getLatLng()); // HQ
-      if (bounds.isValid()) __ffMap.fitBounds(bounds, { padding: [20, 20], maxZoom: 15 });
+    // ongoing report pins + list
+    const ongoing = await fetchOngoingReportCoords();
+    let ongoingHTML = '';
+    if (ongoing.length) {
+      __reportMarkers = ongoing.map(o =>
+        L.marker([o.lat, o.lng], { icon: ICONS.report })
+          .addTo(__map)
+          .bindPopup(`<b>${o.type}</b><br>${o.lat.toFixed(6)}, ${o.lng.toFixed(6)}`)
+      );
+      ongoingHTML = `
+        <div class="mt-2 border-t border-gray-300 pt-1">
+          <strong>Ongoing Report Coordinates:</strong>
+          <ul class="text-sm text-gray-700 list-disc ml-5 mt-1">
+            ${ongoing.map(o => `<li>${o.type} (${o.id}): ${o.lat.toFixed(6)}, ${o.lng.toFixed(6)}</li>`).join('')}
+          </ul>
+        </div>`;
     }
 
-    // Live firefighter coordinates
-    startStationLiveListener(stationKey, ({ lat, lng, updatedAt }) => {
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    // live location listener
+    stopLiveListener();
+    const ref = firebase.database().ref(LIVE_LOCATION_PATH);
+    __liveRef = ref;
 
-      if (!__ffStationMarker) {
-        __ffStationMarker = L.marker([lat, lng], { icon: ICON_STATION })
-          .addTo(__ffMap)
-          .bindPopup(`<b>${stationKey}</b>`);
+    const fitAll = (live) => {
+      const b = L.latLngBounds([]);
+      if (live) b.extend(live);
+      if (__hqMarker) b.extend(__hqMarker.getLatLng());
+      __reportMarkers.forEach(m => b.extend(m.getLatLng()));
+      if (b.isValid()) __map.fitBounds(b, { padding:[20,20], maxZoom:15 });
+    };
+
+    ref.on('value', snap => {
+      const v = snap.val() || {};
+      const lat = parseFloat(v.latitude), lng = parseFloat(v.longitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        info.innerHTML = `<div><strong>LiveLocation:</strong> unavailable</div>${hqHTML}${ongoingHTML}`;
+        setTimeout(() => { try { __map.invalidateSize(); } catch(_) {} }, 200);
+        return;
+      }
+      const ll = [lat, lng];
+      if (!__ffMarker) {
+        __ffMarker = L.marker(ll, { icon: ICONS.station })
+          .addTo(__map)
+          .bindPopup('<b>FireFighter</b>');
       } else {
-        __ffStationMarker.setLatLng([lat, lng]);
+        __ffMarker.setLatLng(ll);
       }
 
       info.innerHTML = `
-        <div><strong>Station:</strong> ${_safe(stationKey)}</div>
-        <div><strong>Coordinates:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}</div>
-        ${updatedAt ? `<div class="text-xs text-gray-500">Updated: ${new Date(updatedAt).toLocaleString()}</div>` : ''}
+        <div><strong>LiveLocation:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}</div>
+        ${v.updatedAt ? `<div class="text-xs text-gray-500">Updated: ${new Date(v.updatedAt).toLocaleString()}</div>` : ''}
         ${hqHTML}
+        ${ongoingHTML}
       `;
 
-      fitToBoth(lat, lng);   // <-- call here, after markers exist
+      fitAll(ll);
+      setTimeout(() => { try { __map.invalidateSize(); } catch(_) {} }, 200);
     });
 
-    setTimeout(() => { try { __ffMap.invalidateSize(); } catch(_) {} }, 200);
-
-  } catch(e){
+  } catch (e) {
     console.error('[FF Chat][Location] open failed:', e);
-    alert(`Could not load station location.\n${e?.message || ''}`);
+    alert(e.message || 'Could not load station location.');
   }
 }
 
-function closeFFChatLocationModal() {
-  stopStationFirebaseListeners();
-  _hide('ffChatLocationModal');
-}
+function closeFFChatLocationModal(){ stopLiveListener(); _hide('ffChatLocationModal'); }
 
 /* =========================================================
  * simple search filter
@@ -1836,6 +1698,111 @@ let fireReports             = @json($fireReports);
 let otherEmergencyReports   = @json($otherEmergencyReports);
 let emsReports              = @json($emsReports ?? []);
 let smsReports              = @json($smsReports ?? []);
+
+// ---- keep only the current station's items right after hydration ----
+(function filterInitialDataToStation(){
+  // coerce object-or-array to array of values
+  const toArray = (v) => Array.isArray(v) ? v : (v && typeof v === 'object') ? Object.values(v) : [];
+
+  function currentStationKey() {
+    const root =
+      (typeof CURRENT_STATION_ROOT === 'string' && CURRENT_STATION_ROOT) ||
+      (typeof window !== 'undefined' && window.CURRENT_STATION_ROOT) ||
+      'CapstoneFlare/CanocotanFireStation';
+    const parts = root.split('/').filter(Boolean);
+    return parts[parts.length - 1] || '';
+  }
+
+function stationKeyFromLabel(name = '') {
+  const n = String(name).toLowerCase();
+  if (n.includes('mabini') || n.includes('west')) return 'MabiniFireStation';
+  if (n.includes('filipina'))                      return 'LaFilipinaFireStation';
+  if (n.includes('canocotan') || n.includes('central')) return 'CanocotanFireStation';
+  return null; // <- IMPORTANT: unknown label = no match
+}
+
+function belongsToCurrentStation(r = {}) {
+  const me = currentStationKey();
+
+  // 1) Prefer explicit DB path marker if present
+  const explicitRoot = r.__root || r.stationRoot || r.sourceRoot || '';
+  if (explicitRoot) {
+    const last = explicitRoot.split('/').filter(Boolean).pop() || '';
+    return last === me;
+  }
+
+  // 2) Fall back to human-readable label matching
+  const label = r.fireStationName || r.stationName || r.prefix || '';
+  const labelKey = stationKeyFromLabel(label);
+  if (labelKey) return labelKey === me;
+
+  // 3) Unknown → exclude to avoid cross-station bleed
+  return false;
+}
+
+
+  function belongsToCurrentStation(r = {}) {
+    const me = currentStationKey();
+    // 1) explicit path wins
+    const explicitRoot = r.__root || r.stationRoot || r.sourceRoot || '';
+    if (explicitRoot) {
+      const last = explicitRoot.split('/').filter(Boolean).pop() || '';
+      return last === me;
+    }
+    // 2) label fallback
+    const label = r.fireStationName || r.stationName || r.prefix || '';
+    const labelKey = stationKeyFromLabel(label);
+    if (label) return labelKey === me;
+    // 3) unknown → keep out (conservative)
+    return false;
+  }
+
+  const keep = (r) => belongsToCurrentStation(r || {});
+
+  // IMPORTANT: coerce first, then filter
+  fireReports           = toArray(fireReports).filter(keep);
+  otherEmergencyReports = toArray(otherEmergencyReports).filter(keep);
+  emsReports            = toArray(emsReports).filter(keep);
+  smsReports            = toArray(smsReports).filter(keep);
+
+  // quick visibility for sanity checks
+  console.info('[filter] station=', currentStationKey(), {
+    fire: fireReports.length,
+    other: otherEmergencyReports.length,
+    ems: emsReports.length,
+    sms: smsReports.length
+  });
+})();
+
+
+
+// --- wipe SSR rows and re-render from filtered arrays ---
+(function hydrateTablesFromFilteredGlobals(){
+  try {
+    // Fire
+    const fireBody = document.getElementById('fireReportsBody');
+    if (fireBody) { fireBody.innerHTML = ''; renderSortedReports(fireReports, 'fireReports'); }
+
+    // Other Emergency
+    const otherBody = document.getElementById('otherEmergencyTableBody');
+    if (otherBody) { otherBody.innerHTML = ''; renderSortedReports(otherEmergencyReports, 'otherEmergency'); }
+
+    // EMS
+    const emsBody = document.getElementById('emsBody');
+    if (emsBody) { emsBody.innerHTML = ''; renderEmsTable(); }
+
+    // SMS
+    const smsBody = document.getElementById('smsReportsBody');
+    if (smsBody) { smsBody.innerHTML = ''; renderSmsReports(); }
+
+    // Merged
+    renderAllReports();
+  } catch (e) {
+    console.warn('hydrateTablesFromFilteredGlobals failed:', e);
+  }
+})();
+
+
 
 // Globals
 let currentReport      = null;
@@ -2113,6 +2080,7 @@ function renderSmsReports(highlightId = null) {
 }
 
 function insertNewSmsRow(report) {
+      report.__root = window.CURRENT_STATION_ROOT; // <— add
   report.date = report.date || new Date().toISOString().slice(0,10);
   report.time = report.time || new Date().toTimeString().slice(0,5);
   const idx = (smsReports || []).findIndex(r => r.id === report.id);
@@ -2181,6 +2149,8 @@ function removeRow(id) {
  * ========================================================= */
 
 function insertNewReportRow(report, reportType) {
+
+      report.__root = window.CURRENT_STATION_ROOT; // <— add
   const tableBodyId = reportType === 'fireReports'
     ? 'fireReportsBody'
     : 'otherEmergencyTableBody';
@@ -2237,6 +2207,7 @@ function insertNewReportRow(report, reportType) {
 
 
 function insertNewEmsRow(report) {
+      report.__root = window.CURRENT_STATION_ROOT; // <— add
   const body = document.getElementById('emsBody');
   if (!body) return;
 
@@ -2940,7 +2911,7 @@ function toggleIncidentTables() {
     document.getElementById('smsReportsSection').classList.remove('hidden');
   } else if (v === 'fireFighterChatReports') {
     document.getElementById('fireFighterChatSection').classList.remove('hidden');
-      loadAllFireFighterAccounts();
+     loadFireFighterAccountRow();
   // <- ensure paint when user opens the tab
   }
 }
@@ -2984,7 +2955,6 @@ function openDetailsModal(incidentId, reportType) {
 
   // ----- FIRE -----
   if (reportType === 'fireReports') {
-    document.getElementById('detailIncidentId').innerText = full.id || 'N/A';
     document.getElementById('detailName').innerText       = pick('name','reporterName','userName');
     document.getElementById('detailContact').innerText    = pick('contact','phone','phoneNumber','mobile');
     document.getElementById('detailFireType').innerText   = pick('type');
@@ -2992,10 +2962,6 @@ function openDetailsModal(incidentId, reportType) {
     document.getElementById('detailDate').innerText       = pick('date');
     document.getElementById('detailReportTime').innerText = t24(pick('reportTime'));
     document.getElementById('detailStatus').innerText     = capStatus(pick('status'));
-
-    const mapEl = document.getElementById('detailFireMapLink');
-    const murl  = pick('mapLink','location');
-    mapEl.innerHTML = (murl && murl !== 'N/A') ? `<a href="${murl}" target="_blank" rel="noopener">Open in Maps</a>` : '';
 
     const b64 = (full.photoBase64 || '').toString().trim();
     document.getElementById('detailFirePhoto').innerHTML = b64
@@ -3006,7 +2972,6 @@ function openDetailsModal(incidentId, reportType) {
 
   // ----- OTHER EMERGENCY -----
   else if (reportType === 'otherEmergency') {
-    document.getElementById('detailIncidentIdOther').innerText = full.id || 'N/A';
     document.getElementById('detailNameOther').innerText       = pick('name','reporterName','userName');
     document.getElementById('detailContactOther').innerText    = pick('contact','phone','phoneNumber','mobile');
     document.getElementById('detailEmergencyType').innerText   = pick('emergencyType','type');
@@ -3014,10 +2979,6 @@ function openDetailsModal(incidentId, reportType) {
     document.getElementById('detailDateOther').innerText       = pick('date');
     document.getElementById('detailReportTimeOther').innerText = t24(pick('reportTime'));
     document.getElementById('detailStatusOther').innerText     = capStatus(pick('status'));
-
-    const mapEl = document.getElementById('detailOtherMapLink');
-    const murl  = pick('location','mapLink');
-    mapEl.innerHTML = (murl && murl !== 'N/A') ? `<a href="${murl}" target="_blank" rel="noopener">Open in Maps</a>` : '';
 
     const b64 = (full.photoBase64 || '').toString().trim();
     document.getElementById('detailOtherPhoto').innerHTML = b64
@@ -3028,7 +2989,6 @@ function openDetailsModal(incidentId, reportType) {
 
   // ----- EMS -----
   else if (reportType === 'emsReports') {
-    document.getElementById('detailIncidentIdEms').innerText = full.id || 'N/A';
     document.getElementById('detailNameEms').innerText       = pick('name','reporterName','userName');
     document.getElementById('detailContactEms').innerText    = pick('contact','phone','phoneNumber','mobile');
     document.getElementById('detailTypeEms').innerText       = pick('type');
@@ -3036,10 +2996,6 @@ function openDetailsModal(incidentId, reportType) {
     document.getElementById('detailDateEms').innerText       = pick('date');
     document.getElementById('detailReportTimeEms').innerText = t24(pick('reportTime'));
     document.getElementById('detailStatusEms').innerText     = capStatus(pick('status'));
-
-    const mapEl = document.getElementById('detailEmsMapLink');
-    const murl  = pick('location','mapLink');
-    mapEl.innerHTML = (murl && murl !== 'N/A') ? `<a href="${murl}" target="_blank" rel="noopener">Open in Maps</a>` : '';
 
     const b64 = (full.photoBase64 || '').toString().trim();
     document.getElementById('detailEmsPhoto').innerHTML = b64
@@ -3051,7 +3007,6 @@ function openDetailsModal(incidentId, reportType) {
   // ----- SMS -----
 else if (reportType === 'smsReports') {
   // Basic info
-  document.getElementById('detailIncidentIdSms').innerText = full.id || 'N/A';
   document.getElementById('detailNameSms').innerText       = pick('name','reporterName','userName');
   document.getElementById('detailContactSms').innerText    = pick('contact','phone','phoneNumber','mobile');
 
@@ -3799,14 +3754,13 @@ function closeDetailsModal() {
 
 function stationNodesForReportType(reportType) {
   const ALL  = `${CURRENT_STATION_ROOT}/AllReport`;
+  const labelByRoot = {
+    'CapstoneFlare/CanocotanFireStation':  'Canocotan Fire Station',
+    'CapstoneFlare/LaFilipinaFireStation': 'La Filipina Fire Station',
+    'CapstoneFlare/MabiniFireStation':     'Mabini Fire Station'
+  };
+  const label = labelByRoot[CURRENT_STATION_ROOT] || 'Canocotan Fire Station';
 
-  const serviceReportType =
-    reportType === 'fireReports' ? 'fire' :
-    reportType === 'emsReports'  ? 'emergencyMedicalServices' :
-    reportType === 'smsReports'  ? 'sms' :
-    'otherEmergency';
-
-  // we keep these for form payload compatibility, but UI will no longer use repliesBase directly
   const collectionBase =
     reportType === 'fireReports'      ? `${ALL}/FireReport` :
     reportType === 'emsReports'       ? `${ALL}/EmergencyMedicalServicesReport` :
@@ -3814,12 +3768,16 @@ function stationNodesForReportType(reportType) {
                                         `${ALL}/OtherEmergencyReport`;
 
   return {
-    repliesBase: collectionBase,         // not used for reading replies anymore
-    serviceReportType,                   // payload to backend stays the same
-    stationBase: ALL,                    // AllReport root
-    prefix: 'TagumCityCentral',          // unchanged in payload
+    repliesBase: collectionBase,
+    serviceReportType:
+      reportType === 'fireReports' ? 'fire' :
+      reportType === 'emsReports'  ? 'emergencyMedicalServices' :
+      reportType === 'smsReports'  ? 'sms' : 'otherEmergency',
+    stationBase: ALL,
+    prefix: label
   };
 }
+
 
 function repliesRef(incidentId, _reportType) {
   const ALL  = `${CURRENT_STATION_ROOT}/AllReport`;
