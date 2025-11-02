@@ -100,6 +100,7 @@
         // Only enable current password + verify first; keep new pass disabled/hidden
         verifyBtn.disabled = false;
         newPassBlock.classList.add('hidden');
+        emailEl.disabled = true;
         passEl.disabled = true;
         pass2El.disabled = true;
 

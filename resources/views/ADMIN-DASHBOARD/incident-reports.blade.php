@@ -21,42 +21,36 @@
   </div>
 
 
-  <!-- =========================================================
-= Modal: Assign on Receive
-========================================================= -->
-<div id="assignModal"
-     class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden"
-     style="z-index: 60;">
+    <!-- =========================================================
+    = Modal: Assign on Receive
+    ========================================================= -->
+    <div id="assignModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden"
+        style="z-index: 60;">
 
-  <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-lg relative">
-    <h3 class="text-lg font-semibold mb-4 text-gray-800">Assign to Fire Station</h3>
+    <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-lg relative">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">Assign to Fire Station</h3>
 
-    <p class="text-sm text-gray-600 mb-3">
-      Choose which station will receive this report.
-    </p>
+        <p class="text-sm text-gray-600 mb-3">
+        Choose which station will receive this report.
+        </p>
 
-<form id="assignForm" class="space-y-3">
-  <label class="flex items-center gap-2">
-    <input type="checkbox" name="station[]" value="CanocotanFireFighterAccount" class="assign-station accent-blue-600">
-    <span>Tagum City Central Fire Station</span>
-  </label>
-  <label class="flex items-center gap-2">
-    <input type="checkbox" name="station[]" value="LaFilipinaFireFighterAccount" class="assign-station accent-blue-600">
-    <span>La Filipina Fire Sub-Station</span>
-  </label>
-  <label class="flex items-center gap-2">
-    <input type="checkbox" name="station[]" value="MabiniFireFighterAccount" class="assign-station accent-blue-600">
-    <span>Tagum City West Fire Sub-Station</span>
-  </label>
+    <form id="assignForm" class="space-y-3">
+    <!-- RECEIVE: will be filled with ONLY current station's FF accounts that don't have the report -->
+    <div id="receiveSection"></div>
 
-  <div class="flex justify-end gap-2 pt-4">
-    <button type="button" onclick="closeAssignModal()"
-            class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800">Cancel</button>
-    <button type="submit" id="assignSubmitBtn"
-            class="px-4 py-2 rounded bg-blue-600 text-white opacity-50 cursor-not-allowed"
-            disabled>Assign & Receive</button>
-  </div>
-</form>
+    <!-- BACKUP: will be filled with OTHER stations' FF accounts that don't have the report -->
+    <div id="backupSection" class="hidden"></div>
+
+    <div class="flex justify-end gap-2 pt-4">
+        <button type="button" onclick="closeAssignModal()"
+                class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800">Cancel</button>
+        <button type="submit" id="assignSubmitBtn"
+                class="px-4 py-2 rounded bg-blue-600 text-white opacity-50 cursor-not-allowed"
+                disabled>Assign</button>
+    </div>
+    </form>
+
 
 
 
@@ -1155,17 +1149,39 @@ document.addEventListener("DOMContentLoaded", () => {
  * Path: TagumCityCentralFireStation/FireFighter/AllFireFighterAccount
  * ========================================================= */
 
-const STATION_ROOT = 'TagumCityCentralFireStation';
-const HQ_PROFILE_PATH = `${STATION_ROOT}/Profile`;
 
-const FIREFIGHTER_PATH =
-  `${STATION_ROOT}/FireFighter/AllFireFighterAccount`;
+// Station context under CapstoneFlare
 
-const FF_ACCOUNTS_BASE = FIREFIGHTER_PATH;
+ window.AUTH_EMAIL = @json(session('firebase_user_email'));
+  window.CURRENT_STATION_ROOT = @json(session('station'));       // e.g. "CapstoneFlare/LaFilipinaFireStation"
+  window.CURRENT_STATION_LABEL = @json(session('station_label')); // e.g. "La Filipina Fire Station"
+
+  // Derive the firefighter account key from the station root
+  (function deriveFFKey() {
+    const root = window.CURRENT_STATION_ROOT || '';
+    const last = root.split('/').filter(Boolean).pop();
+
+    const map = {
+      CanocotanFireStation:  'CanocotanFireFighterAccount',
+      LaFilipinaFireStation: 'LaFilipinaFireFighterAccount',
+      MabiniFireStation:     'MabiniFireFighterAccount'
+    };
+
+    window.CURRENT_FF_ACCOUNT_KEY = map[last] || '';  // 👈 this is what receive() needs
+  })();
+
+const CURRENT_STATION_ROOT =
+  (typeof window !== 'undefined' && window.CURRENT_STATION_ROOT) ||
+  'CapstoneFlare/CanocotanFireStation'; // last-resort fallback
+
+
+const HQ_PROFILE_PATH   = `${CURRENT_STATION_ROOT}/Profile`;
+const FIREFIGHTER_PATH  = `${CURRENT_STATION_ROOT}/FireFighter/FireFighterAccount`;   // 👈 matches your screenshot
+const FF_ACCOUNTS_BASE  = FIREFIGHTER_PATH;
+
+
 const ADMIN_MESSAGES = 'AdminMessages';
 const UNREAD_VALUE   = true;   // we treat true = unread, false = read
-
-
 
 
 function _el(id){ return document.getElementById(id); }
@@ -1315,8 +1331,6 @@ function initFFChatUnreadBadges() {
 }
 
 
-
-
 /* ---------- DETAILS MODAL ---------- */
 // Pull one station object
 function getFFStation(key){
@@ -1343,7 +1357,6 @@ function closeFFChatDetailsModal(){ _hide('ffChatDetailsModal'); }
 /* ---------- MESSAGE MODAL (simple live thread) ---------- */
 /* ---------- MESSAGE MODAL (text / image / audio) ---------- */
 /* ---------- MESSAGE MODAL (text / image / audio) ---------- */
-
 
 
 function renderFFChatThread(list = []) {
@@ -1781,7 +1794,6 @@ function filterFireFighterChatTable() {
 }
 
 
-
 /* =========================================================
  * URL PARAMS / NAV DEEP-LINKING
  * ========================================================= */
@@ -1874,34 +1886,21 @@ function dateToISO(dmy) {
  * STATION CONTEXT / NODES (LOCKED TO CANOCOTAN)
  * ========================================================= */
 
-// Hard-lock to Canocotan Fire Station (ignore session email)
-const FORCE_PREFIX = 'TagumCityCentral';
 
 function nodes() {
-  const STATION_ROOT = 'TagumCityCentralFireStation';
-  const ALL = `${STATION_ROOT}/AllReport`;
-
+  const ALL = `${CURRENT_STATION_ROOT}/AllReport`;
   return {
-    // kept for compatibility with callers
-    prefix: 'TagumCityCentral',
-
-    // new base
     base: ALL,
-
-    // per-type collections
-    fireReport: `${ALL}/FireReport`,
-    otherEmergency: `${ALL}/OtherEmergencyReport`,
-    ems: `${ALL}/EmergencyMedicalServicesReport`,
-    sms: `${ALL}/SmsReport`,
-
-    // single SMS path now (no legacy variants)
-    smsCandidates: [`${ALL}/SmsReport`],
-
-    // station meta (adjust to your real location if different)
-    profile: `${STATION_ROOT}/Profile`,
-    firefighters: `${STATION_ROOT}/FireFighters`,
+    fireReport:        `${ALL}/FireReport`,
+    otherEmergency:    `${ALL}/OtherEmergencyReport`,
+    ems:               `${ALL}/EmergencyMedicalServicesReport`,
+    sms:               `${ALL}/SmsReport`,
+    smsCandidates:     [`${ALL}/SmsReport`],
+    profile:           `${CURRENT_STATION_ROOT}/Profile`,
+    firefighters:      `${CURRENT_STATION_ROOT}/FireFighter`
   };
 }
+
 
 
 async function resolveSmsPathById(id) {
@@ -2395,6 +2394,44 @@ function normalizeLL(r = {}) {
  * ALL REPORTS (MERGE + RENDER)
  * ========================================================= */
 
+ // --- station filter helpers (NEW) ---
+function currentStationKey() {
+  const root = (typeof CURRENT_STATION_ROOT === 'string' && CURRENT_STATION_ROOT) ||
+               (typeof window !== 'undefined' && window.CURRENT_STATION_ROOT) ||
+               'CapstoneFlare/CanocotanFireStation';
+  const parts = root.split('/').filter(Boolean);
+  return parts[parts.length - 1] || '';
+}
+
+function stationKeyFromLabel(name = '') {
+  const n = String(name).toLowerCase();
+  if (n.includes('mabini') || n.includes('west')) return 'MabiniFireStation';
+  if (n.includes('filipina'))                      return 'LaFilipinaFireStation';
+  return 'CanocotanFireStation';
+}
+
+/** Keep only reports that belong to the current station.
+ *  Works with any of these fields if present:
+ *  - __root | stationRoot | sourceRoot: full db path (preferred)
+ *  - fireStationName | stationName | prefix: human label fallback
+ */
+function belongsToCurrentStation(r = {}) {
+  const me = currentStationKey();
+
+  const explicitRoot = r.__root || r.stationRoot || r.sourceRoot || '';
+  if (explicitRoot) {
+    const parts = explicitRoot.split('/').filter(Boolean);
+    return (parts[parts.length - 1] || '') === me;
+  }
+
+  const label = r.fireStationName || r.stationName || r.prefix || '';
+  if (label) return stationKeyFromLabel(label) === me;
+
+  // If we can't tell, default to excluding to avoid cross-station bleed.
+  return false;
+}
+
+
 function parseDT(d, t, fallbackTs, preferMDY = false) {
   // t → 24h
   const time24 = to24h(t || '') || (t || '00:00');
@@ -2436,60 +2473,65 @@ function firstFinite(...vals) {
 
 
 function buildAllReports() {
- const fire = asArray(fireReports).map(r => ({
-  id: r.id, type: 'fireReports',
-  location: r.exactLocation || r.location || 'N/A',
-  date: r.date || '', time: r.reportTime || '',
-  status: r.status || 'Unknown',
-  lat: r.latitude, lng: r.longitude,
-  // 1) prefer numeric timestamp; 2) else parse strings (DMY for legacy fire/other/EMS)
-  sortTs: (() => {
-    const num = firstFinite(r.timestamp, r.createdAt, r.updatedAt);
-    return Number.isFinite(num) ? num : parseDT(r.date, r.reportTime, 0, /*preferMDY=*/false);
-  })()
-}));
+  const fire = asArray(fireReports)
+    .filter(belongsToCurrentStation) // ← NEW
+    .map(r => ({
+      id: r.id, type: 'fireReports',
+      location: r.exactLocation || r.location || 'N/A',
+      date: r.date || '', time: r.reportTime || '',
+      status: r.status || 'Unknown',
+      lat: r.latitude, lng: r.longitude,
+      sortTs: (() => {
+        const num = firstFinite(r.timestamp, r.createdAt, r.updatedAt);
+        return Number.isFinite(num) ? num : parseDT(r.date, r.reportTime, 0, false);
+      })()
+    }));
 
-const other = asArray(otherEmergencyReports).map(r => ({
-  id: r.id, type: 'otherEmergency',
-  location: r.exactLocation || r.location || 'N/A',
-  date: r.date || '', time: r.reportTime || '',
-  status: r.status || 'Unknown',
-  lat: r.latitude, lng: r.longitude,
-  sortTs: (() => {
-    const num = firstFinite(r.timestamp, r.createdAt, r.updatedAt);
-    return Number.isFinite(num) ? num : parseDT(r.date, r.reportTime, 0, /*preferMDY=*/false);
-  })()
-}));
+  const other = asArray(otherEmergencyReports)
+    .filter(belongsToCurrentStation) // ← NEW
+    .map(r => ({
+      id: r.id, type: 'otherEmergency',
+      location: r.exactLocation || r.location || 'N/A',
+      date: r.date || '', time: r.reportTime || '',
+      status: r.status || 'Unknown',
+      lat: r.latitude, lng: r.longitude,
+      sortTs: (() => {
+        const num = firstFinite(r.timestamp, r.createdAt, r.updatedAt);
+        return Number.isFinite(num) ? num : parseDT(r.date, r.reportTime, 0, false);
+      })()
+    }));
 
-const ems = asArray(emsReports).map(r => ({
-  id: r.id, type: 'emsReports',
-  location: r.exactLocation || r.location || 'N/A',
-  date: r.date || '', time: r.reportTime || '',
-  status: r.status || 'Unknown',
-  lat: r.latitude, lng: r.longitude,
-  sortTs: (() => {
-    const num = firstFinite(r.timestamp, r.createdAt, r.updatedAt);
-    return Number.isFinite(num) ? num : parseDT(r.date, r.reportTime, 0, /*preferMDY=*/false);
-  })()
-}));
+  const ems = asArray(emsReports)
+    .filter(belongsToCurrentStation) // ← NEW
+    .map(r => ({
+      id: r.id, type: 'emsReports',
+      location: r.exactLocation || r.location || 'N/A',
+      date: r.date || '', time: r.reportTime || '',
+      status: r.status || 'Unknown',
+      lat: r.latitude, lng: r.longitude,
+      sortTs: (() => {
+        const num = firstFinite(r.timestamp, r.createdAt, r.updatedAt);
+        return Number.isFinite(num) ? num : parseDT(r.date, r.reportTime, 0, false);
+      })()
+    }));
 
-const sms = asArray(smsReports).map(r => ({
-  id: r.id, type: 'smsReports',
-  location: r.location || 'N/A',
-  date: r.date || '', time: r.time || '',
-  status: r.status || 'N/A',
-  lat: r.latitude, lng: r.longitude,
-  // SMS from Android has millisecond 'timestamp' — use it; else parse as MDY
-  sortTs: (() => {
-    const num = firstFinite(r.timestamp, r.createdAt, r.updatedAt);
-    return Number.isFinite(num) ? num : parseDT(r.date, r.time, 0, /*preferMDY=*/true);
-  })()
-}));
+  const sms = asArray(smsReports)
+    .filter(belongsToCurrentStation) // ← NEW
+    .map(r => ({
+      id: r.id, type: 'smsReports',
+      location: r.location || 'N/A',
+      date: r.date || '', time: r.time || '',
+      status: r.status || 'N/A',
+      lat: r.latitude, lng: r.longitude,
+      sortTs: (() => {
+        const num = firstFinite(r.timestamp, r.createdAt, r.updatedAt);
+        return Number.isFinite(num) ? num : parseDT(r.date, r.time, 0, true);
+      })()
+    }));
 
-return [...fire, ...other, ...ems, ...sms].sort((a, b) => b.sortTs - a.sortTs);
-
-
+  return [...fire, ...other, ...ems, ...sms].sort((a, b) => b.sortTs - a.sortTs);
 }
+
 
 function statusColor(s) {
   return s === 'Ongoing'   ? 'red'
@@ -3043,7 +3085,6 @@ else if (reportType === 'smsReports') {
   document.getElementById('smsDetails').classList.remove('hidden');
 }
 
-
   // ----- Status action button (works for ALL types, including SMS) -----
   // ----- Status action button (works for ALL types, including SMS) -----
 const statusActionDiv = document.getElementById('statusActionButtons');
@@ -3060,18 +3101,20 @@ if (curStatus === 'Pending') {
   btn.onmouseenter = () => (btn.style.backgroundColor = '#d1a500');
   btn.onmouseleave = () => (btn.style.backgroundColor = '#F3C011');
   btn.textContent = 'Receive';
-  btn.onclick = () => openAssignModal(full.id, reportType);
+  btn.onclick = () => openAssignModal(full.id, reportType, 'receive');
+
   statusActionDiv.appendChild(btn);
 
 } else if (curStatus === 'Ongoing') {
   // REQUEST BACKUP → open assignment modal
   const btnBackup = document.createElement('button');
+  btnBackup.type = 'button';                 // 👈 add this
   btnBackup.className = 'px-4 py-2 rounded mt-2 text-white mr-3';
   btnBackup.style.backgroundColor = '#F3C011'; // amber
   btnBackup.onmouseenter = () => (btnBackup.style.backgroundColor = '#d1a500');
   btnBackup.onmouseleave = () => (btnBackup.style.backgroundColor = '#F3C011');
   btnBackup.textContent = 'Request Backup';
-  btnBackup.onclick = () => openAssignModal(full.id, reportType);
+  btnBackup.onclick = () => openAssignModal(full.id, reportType, 'backup');
   statusActionDiv.appendChild(btnBackup);
 
   // DONE → mark Completed
@@ -3092,162 +3135,292 @@ if (curStatus === 'Pending') {
   document.getElementById('detailsModal').classList.remove('hidden');
 }
 
+
+
 /* =========================================================
- * ASSIGN-ON-RECEIVE: MODAL + WRITE + STATUS FLIP
+ * ASSIGN-ON-RECEIVE: MODAL + WRITE + STATUS FLIP (FINAL)
  * ========================================================= */
 
-let __assignContext = { incidentId: null, reportType: null, reportObject: null };
+let __assignContext = {
+  incidentId: null,
+  reportType: null,
+  reportObject: null,
+  mode: 'backup'
+};
+
+/* ---------- Station / Account helpers ---------- */
+
+// Active station root, e.g. "CapstoneFlare/CanocotanFireStation"
+function currentStationRoot() {
+  return (typeof window !== 'undefined' && window.CURRENT_STATION_ROOT)
+      || 'CapstoneFlare/CanocotanFireStation';
+}
+
+// Last segment only, e.g. "CanocotanFireStation"
+function currentStationKey() {
+  const parts = (currentStationRoot() || '').split('/').filter(Boolean);
+  return parts[parts.length - 1] || '';
+}
+
+// Fallback FF account key by station node
+function ffKeyFallbackFromStationRoot(root) {
+  const last = (root || '').split('/').filter(Boolean).pop();
+  return last === 'CanocotanFireStation'  ? 'CanocotanFireFighterAccount'
+       : last === 'LaFilipinaFireStation' ? 'LaFilipinaFireFighterAccount'
+       : last === 'MabiniFireStation'     ? 'MabiniFireFighterAccount'
+       : '';
+}
+
+function currentFireFighterAccountKey() {
+  const fromWindow = (typeof CURRENT_FF_ACCOUNT_KEY === 'string' && CURRENT_FF_ACCOUNT_KEY)
+                  || (typeof window !== 'undefined' && window.CURRENT_FF_ACCOUNT_KEY);
+  if (fromWindow) return fromWindow;
+  return ffKeyFallbackFromStationRoot(currentStationRoot());
+}
+
+// Given an <input>, figure out which station root + account key it targets.
+// Supports either "root::accountKey" in value OR value=accountKey + data-root attribute.
+function parseTargetFromInput(inputEl) {
+  const raw = (inputEl.value || '').trim();
+  if (raw.includes('::')) {
+    const [root, accountKey] = raw.split('::');
+    return { root: root.trim(), accountKey: (accountKey || '').trim() };
+  }
+  const dataRoot = (inputEl.getAttribute('data-root') || '').trim();
+  return { root: dataRoot || currentStationRoot(), accountKey: raw };
+}
+
+// Hide/disable the current station’s accounts in backup chooser
+function excludeCurrentStationFromChoices(containerEl) {
+  try {
+    const me = currentStationKey();
+    if (!containerEl || !me) return;
+
+    containerEl.querySelectorAll('input[name="station[]"]').forEach(cb => {
+      const v = (cb.value || '').trim();
+      let stationLastSeg = '';
+      if (v.includes('::')) {
+        const root = v.split('::')[0].trim();
+        const parts = root.split('/').filter(Boolean);
+        stationLastSeg = parts[parts.length - 1] || '';
+      } else {
+        const root = (cb.getAttribute('data-root') || '').trim();
+        const parts = root.split('/').filter(Boolean);
+        stationLastSeg = parts[parts.length - 1] || '';
+      }
+      if (stationLastSeg === me) {
+        cb.checked = false;
+        cb.disabled = true;
+        const row = cb.closest('label,div,li,tr') || cb;
+        row.classList.add('hidden');
+      }
+    });
+  } catch (_) {}
+}
+
+/* ---------- Type helpers ---------- */
+
+function accountsBase(root){ return `${root}/FireFighter/FireFighterAccount`; }
+
+// Determine whether a station keeps a single FF node or multiple keyed nodes
+async function resolveAccountShape(root) {
+  const base = accountsBase(root);
+  const snap = await firebase.database().ref(base).once('value');
+  const v = snap.val();
+
+  if (!v || typeof v !== 'object') {
+    return { shape: 'multi', base, key: ffKeyFallbackFromStationRoot(root) };
+  }
+
+  const keys = Object.keys(v);
+  const looksSingle =
+    ('name' in v || 'contact' in v || 'email' in v) &&
+    !keys.some(k => v[k] && typeof v[k] === 'object' && ('AllReport' in v[k] || 'name' in v[k]));
+
+  if (looksSingle) return { shape: 'single', base };
+
+  const someKey = keys.find(k => v[k] && typeof v[k] === 'object') || ffKeyFallbackFromStationRoot(root);
+  return { shape: 'multi', base, key: someKey };
+}
 
 function typeNodeFor(reportType) {
-  return reportType === 'fireReports'      ? 'FireReport'
-       : reportType === 'otherEmergency'   ? 'OtherEmergencyReport'
-       : reportType === 'emsReports'       ? 'EmergencyMedicalServicesReport'
-       : reportType === 'smsReports'       ? 'SmsReport'
+  return reportType === 'fireReports'    ? 'FireReport'
+       : reportType === 'otherEmergency' ? 'OtherEmergencyReport'
+       : reportType === 'emsReports'     ? 'EmergencyMedicalServicesReport'
+       : reportType === 'smsReports'     ? 'SmsReport'
        : 'Unknown';
 }
 
+/* ---------- Inventory / “already has it?” checks ---------- */
 
-function getSelectedStations() {
+// Does this station (in any FF account) already have the incident?
+async function stationHasReport(root, reportType, incidentId) {
+  const t = typeNodeFor(reportType);
+  const base = accountsBase(root);
+
+  // Check single-shape path
+  const single = await firebase.database()
+    .ref(`${base}/AllReport/${t}/${incidentId}`)
+    .once('value');
+  if (single.exists()) return true;
+
+  // Check multi-shape children (any key)
+  const listSnap = await firebase.database().ref(base).once('value');
+  const obj = listSnap.val() || {};
+  const keys = Object.keys(obj).filter(k => obj[k] && typeof obj[k] === 'object');
+
+  for (const k of keys) {
+    const s = await firebase.database()
+      .ref(`${base}/${k}/AllReport/${t}/${incidentId}`)
+      .once('value');
+    if (s.exists()) return true;
+  }
+  return false;
+}
+
+/* ---------- Core write (direct-to-FFAccount) ---------- */
+/* targets: [{ root: 'CapstoneFlare/MabiniFireStation', accountKey?: '...' }, ...] */
+async function writeAssignmentsDirect({ incidentId, reportType, reportObject, targets }) {
+  const typeNode = typeNodeFor(reportType);
+  if (typeNode === 'Unknown') throw new Error('Unknown report type.');
+
+  const writes = [];
+  const accountKeysWritten = [];
+
+  for (const tgt of targets) {
+    const { root } = tgt;
+    if (!root) continue;
+
+    const shapeInfo = await resolveAccountShape(root);
+    let refPath;
+
+    if (shapeInfo.shape === 'single') {
+      refPath = `${shapeInfo.base}/AllReport/${typeNode}/${incidentId}`;
+      accountKeysWritten.push('single');
+    } else {
+      const key = tgt.accountKey || shapeInfo.key || ffKeyFallbackFromStationRoot(root);
+      refPath = `${shapeInfo.base}/${key}/AllReport/${typeNode}/${incidentId}`;
+      accountKeysWritten.push(key);
+    }
+
+    const payload = {
+      ...reportObject,
+      assignedStationAccounts: accountKeysWritten,
+      assignedAt: Date.now(),
+      status: 'Ongoing'
+    };
+    writes.push(firebase.database().ref(refPath).set(payload));
+  }
+
+  const results = await Promise.allSettled(writes);
+  const fails = results.filter(r => r.status === 'rejected');
+  if (fails.length === results.length) throw new Error('All assignments failed.');
+
+  const n = nodes?.();
+  const srcPath =
+    reportType === 'fireReports'    ? n?.fireReport :
+    reportType === 'otherEmergency' ? n?.otherEmergency :
+    reportType === 'emsReports'     ? n?.ems :
+    reportType === 'smsReports'     ? n?.sms : null;
+
+  if (srcPath) {
+    await firebase.database().ref(`${srcPath}/${incidentId}`).update({
+      status: 'Ongoing',
+      assignedStationAccounts: accountKeysWritten
+    });
+  }
+
+  try {
+    setStatusEverywhere?.(incidentId, reportType, 'Ongoing');
+    const ok = results.length - fails.length;
+    showToast?.(`Assigned to ${ok} station${ok>1?'s':''}${fails.length?` (${fails.length} failed)`:''}`);
+  } catch {}
+  if (fails.length) alert(`${fails.length} assignment(s) failed. See console.`);
+}
+
+/* ---------- Optional account fetchers (kept intact) ---------- */
+
+async function fetchAccounts(root){
+  const snap = await firebase.database().ref(accountsBase(root)).once('value');
+  const obj = snap.val() || {};
+  if (Object.keys(obj).length === 0) return [];
+  if (!Object.values(obj).some(v => v && typeof v === 'object' && 'name' in v)) {
+    return [{ key: '', name: obj.name || 'Fire Fighter', contact: obj.contact || '' }];
+  }
+  return Object.keys(obj).map(k => ({
+    key: k,
+    name: obj[k]?.name || k,
+    contact: obj[k]?.contact || ''
+  }));
+}
+
+async function alreadyAssigned(root, accountKey, reportType, incidentId){
+  const t = typeNodeFor(reportType);
+  const p = `${root}/FireFighter/FireFighterAccount/${accountKey}/AllReport/${t}/${incidentId}`;
+  const s = await firebase.database().ref(p).once('value');
+  return s.exists();
+}
+
+/* ---------- UI helpers ---------- */
+
+function getSelectedInputs() {
   return Array.from(document.querySelectorAll('#assignForm input[name="station[]"]:checked'));
 }
 
 function updateAssignButton() {
   const btn = document.getElementById('assignSubmitBtn');
-  const any = getSelectedStations().length > 0;
+  const any = getSelectedInputs().length > 0;
   if (!btn) return;
   btn.disabled = !any;
   btn.classList.toggle('opacity-50', !any);
   btn.classList.toggle('cursor-not-allowed', !any);
 }
 
+/* ---------- Open Assign Modal (receive vs backup) ---------- */
 
-function openAssignModal(incidentId, reportType) {
-  // pull the freshest row payload to copy over
+function openAssignModal(incidentId, reportType, mode = 'backup') {
   const row = document.getElementById(`reportRow${incidentId}`) ||
               document.querySelector(`#allReportsBody tr[data-id="${incidentId}"][data-type="${reportType}"]`);
   let rpt = {};
   try { rpt = JSON.parse(row?.getAttribute('data-report') || '{}'); } catch {}
   rpt.id = rpt.id || incidentId;
 
-  __assignContext = { incidentId, reportType, reportObject: rpt };
+  __assignContext = { incidentId, reportType, reportObject: rpt, mode };
 
-  const form = document.getElementById('assignForm');
-  if (form) {
-    // reset UI state
-    form.reset();
+  // RECEIVE → auto-assign to my own station without showing modal
+  if (mode === 'receive') {
+    const meRoot = currentStationRoot();
+    const meFF   = currentFireFighterAccountKey();
+    if (!meRoot || !meFF) { alert('Missing station/account context.'); return; }
 
-    // wire up checkbox changes (fresh each open)
-    form.querySelectorAll('input[name="station[]"]').forEach(cb => {
-      cb.onchange = updateAssignButton;
-    });
-
-    // ensure the Assign button starts disabled until a station is selected
-    updateAssignButton();
-
-    // IMPORTANT: own the submit handler here so it works every time the modal opens
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-
-      const btn = document.getElementById('assignSubmitBtn');
-      if (btn) { btn.disabled = true; btn.classList.add('opacity-60', 'cursor-wait'); }
-
-      // Collect multiple selections
-      const selected = Array.from(document.querySelectorAll('input[name="station[]"]:checked'))
-                            .map(i => i.value);
-      const { incidentId, reportType, reportObject } = __assignContext || {};
-
-      if (!selected.length) {
-        alert('Please select at least one station.');
-        if (btn) { btn.disabled = false; btn.classList.remove('opacity-60', 'cursor-wait'); }
-        return;
-      }
-      if (!incidentId || !reportType) {
-        alert('Missing context for assignment.');
-        if (btn) { btn.disabled = false; btn.classList.remove('opacity-60', 'cursor-wait'); }
-        return;
-      }
-
-      const typeNode = typeNodeFor(reportType);
-      const base = 'TagumCityCentralFireStation/FireFighter/AllFireFighterAccount';
-
-      // payload written into each station account
-      const payload = {
-        ...reportObject,
-        assignedStationAccounts: selected,
-        assignedAt: Date.now(),
-        status: 'Ongoing'
-      };
-
-      try {
-        // 1) write to each selected station (parallel)
-        const writes = selected.map(stKey => {
-          const destRef = firebase.database()
-            .ref(`${base}/${stKey}/AllReport/${typeNode}/${incidentId}`);
-          return destRef.set(payload);
-        });
-
-        const results = await Promise.allSettled(writes);
-        const failures = results.filter(r => r.status === 'rejected');
-
-        if (failures.length === selected.length) {
-          throw new Error('All assignments failed. Check network/Firebase rules.');
-        }
-
-        // 2) flip original collection to Ongoing (once)
-        const n = nodes();
-        const srcPath =
-          reportType === 'fireReports'    ? n.fireReport :
-          reportType === 'otherEmergency' ? n.otherEmergency :
-          reportType === 'emsReports'     ? n.ems :
-          reportType === 'smsReports'     ? n.sms : null;
-
-        if (srcPath) {
-          await firebase.database().ref(`${srcPath}/${incidentId}`).update({
-            status: 'Ongoing',
-            assignedStationAccounts: selected
-          });
-        }
-
-        // 3) UI updates (non-fatal)
-        try {
-          setStatusEverywhere?.(incidentId, reportType, 'Ongoing');
-          const okCount = selected.length - failures.length;
-          showToast?.(`Assigned to ${okCount} station${okCount>1?'s':''}${failures.length?` (${failures.length} failed)`:''}`);
-        } catch(_) {}
-
-        // Close modals
-        queueMicrotask(() => {
-          closeAssignModal();
-          closeDetailsModal();
-        });
-
-        // New
-        // Partial failure notice
-        if (failures.length) {
-          console.warn('Some assignments failed:', failures);
-          alert(`${failures.length} assignment(s) failed. Check console for details.`);
-        }
-
-      } catch (err) {
-        console.error('[assign] error:', err);
-        alert(err.message || 'Failed to assign.');
-      } finally {
-        if (btn) { btn.disabled = false; btn.classList.remove('opacity-60', 'cursor-wait'); }
-      }
-    };
+    writeAssignmentsDirect({
+      incidentId, reportType, reportObject: rpt,
+      targets: [{ root: meRoot, accountKey: meFF }]
+    }).then(() => { closeAssignModal?.(); closeDetailsModal?.(); })
+      .catch(e => alert(e?.message || 'Failed to assign.'));
+    return;
   }
 
-  // finally show the modal
-  document.getElementById('assignModal')?.classList.remove('hidden');
+  // BACKUP → show modal with other stations only
+  const modal = document.getElementById('assignModal');
+  const receiveBox = document.getElementById('receiveSection');
+  const backupBox  = document.getElementById('backupSection');
+
+  receiveBox?.classList.add('hidden');
+  backupBox?.classList.remove('hidden');
+  modal?.classList.remove('hidden');
+
+  renderBackupChooser({ incidentId, reportType })
+    .catch(e => {
+      console.error(e);
+      if (backupBox) backupBox.innerHTML =
+        `<div class="text-sm text-red-600">Could not load accounts.</div>`;
+    });
 }
 
+/* ---------- Submit: take checked stations and write ---------- */
 
-function closeAssignModal() {
-  document.getElementById('assignModal')?.classList.add('hidden');
-  __assignContext = { incidentId: null, reportType: null, reportObject: null };
-}
-
-(() => {
+(function wireAssignSubmit(){
   const form = document.getElementById('assignForm');
   if (!form) return;
 
@@ -3255,15 +3428,119 @@ function closeAssignModal() {
     e.preventDefault();
 
     const btn = document.getElementById('assignSubmitBtn');
+    const checks = Array.from(form.querySelectorAll('input[name="station[]"]:checked'));
+    if (!checks.length) return;
+
+    const { incidentId, reportType, reportObject } = __assignContext || {};
+    if (!incidentId || !reportType) { alert('Missing context.'); return; }
+
+    // targets are just station roots; accountKey resolved per station
+    const targets = checks.map(cb => ({ root: cb.value }));
+
+    try {
+      btn.disabled = true; btn.classList.add('opacity-60','cursor-wait');
+      await writeAssignmentsDirect({ incidentId, reportType, reportObject, targets });
+      closeAssignModal(); closeDetailsModal();
+    } catch (err) {
+      console.error(err);
+      alert(err?.message || 'Failed to assign.');
+    } finally {
+      btn.disabled = false; btn.classList.remove('opacity-60','cursor-wait');
+    }
+  });
+})();
+
+/* ---------- Backup chooser (station-level; show NODE names only) ---------- */
+
+async function renderBackupChooser({ incidentId, reportType }) {
+  const me = currentStationRoot();
+  const others = STATION_ROOTS.filter(r => r !== me);
+
+  const box = document.getElementById('backupSection');
+  const btn = document.getElementById('assignSubmitBtn');
+  box.innerHTML = '';
+  btn.disabled = true;
+  btn.classList.add('opacity-50','cursor-not-allowed');
+
+  // Filter out stations that already have the report
+  const eligibleRoots = [];
+  for (const root of others) {
+    const has = await stationHasReport(root, reportType, __assignContext.incidentId);
+    if (!has) eligibleRoots.push(root);
+  }
+
+  if (!eligibleRoots.length) {
+    try { showToast?.('Already assigned to all stations.'); } catch {}
+    closeAssignModal?.();
+    return;
+  }
+
+  // Build simple station-name checkboxes (node names only, no numbers)
+  eligibleRoots.forEach(root => {
+    const nodeName = root.split('/').pop(); // e.g., "MabiniFireStation"
+    const label = document.createElement('label');
+    label.className = 'flex items-center gap-2 py-1';
+    label.innerHTML = `
+      <input type="checkbox" name="station[]" value="${root}" class="h-4 w-4">
+      <span class="text-sm font-medium">${nodeName}</span>
+    `;
+    box.appendChild(label);
+  });
+
+  // Enable the Assign button when any is checked
+  box.querySelectorAll('input[name="station[]"]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const any = box.querySelector('input[name="station[]"]:checked');
+      btn.disabled = !any;
+      btn.classList.toggle('opacity-50', !any);
+      btn.classList.toggle('cursor-not-allowed', !any);
+    });
+  });
+}
+
+// parse value "root::accountKey::shape" (kept for legacy)
+function parseTargetFromInput(inputEl) {
+  const raw = (inputEl.value || '').trim();
+  const [root, accountKey, shape] = raw.split('::');
+  return { root, accountKey: accountKey || '', shape: shape || 'multi' };
+}
+
+/* ---------- Close modal ---------- */
+
+function closeAssignModal() {
+  document.getElementById('assignModal')?.classList.add('hidden');
+  __assignContext = { incidentId: null, reportType: null, reportObject: null, mode: 'backup' };
+}
+
+/* ---------- Safety net: legacy submit handler (backup-mode behavior) ---------- */
+/* NOTE: No-op when our new station-only checkboxes are used (no '::' in value). */
+
+(() => {
+  const form = document.getElementById('assignForm');
+  if (!form) return;
+
+  excludeCurrentStationFromChoices(form);
+  updateAssignButton();
+
+  form.addEventListener('submit', async (e) => {
+    // Detect new flow (values are just station roots). If so, let the main handler do it.
+    const rawVals = Array.from(form.querySelectorAll('input[name="station[]"]:checked')).map(cb => cb.value || '');
+    if (rawVals.length && rawVals.every(v => !String(v).includes('::'))) {
+      return; // new handler already processed
+    }
+
+    // Legacy flow below (values like "root::accountKey::shape")
+    e.preventDefault();
+
+    const btn = document.getElementById('assignSubmitBtn');
     if (btn) { btn.disabled = true; btn.classList.add('opacity-60', 'cursor-wait'); }
 
-    // Collect multiple selections
-    const selected = Array.from(document.querySelectorAll('input[name="station[]"]:checked'))
-                          .map(i => i.value);
+    const inputs = getSelectedInputs();
+    const targets = inputs.map(parseTargetFromInput).filter(t => t.root && t.accountKey);
     const { incidentId, reportType, reportObject } = __assignContext || {};
 
-    if (!selected.length) {
-      alert('Please select at least one station.');
+    if (!targets.length) {
+      alert('Please select at least one FireFighter account for backup.');
       if (btn) { btn.disabled = false; btn.classList.remove('opacity-60', 'cursor-wait'); }
       return;
     }
@@ -3273,74 +3550,143 @@ function closeAssignModal() {
       return;
     }
 
-    const typeNode = typeNodeFor(reportType);
-    const base = 'TagumCityCentralFireStation/FireFighter/AllFireFighterAccount';
-
-    // payload written into each station account
-    const payload = {
-      ...reportObject,
-      assignedStationAccounts: selected,   // ← record all assignees
-      assignedAt: Date.now(),
-      status: 'Ongoing'
-    };
-
     try {
-      // 1) write to each selected station (parallel)
-      const writes = selected.map(stKey => {
-        const destRef = firebase.database()
-          .ref(`${base}/${stKey}/AllReport/${typeNode}/${incidentId}`);
-        return destRef.set(payload);
-      });
-
-      const results = await Promise.allSettled(writes);
-      const failures = results.filter(r => r.status === 'rejected');
-
-      if (failures.length === selected.length) {
-        throw new Error('All assignments failed. Check network/Firebase rules.');
-      }
-
-      // 2) flip original collection to Ongoing (once)
-      const n = nodes();
-      const srcPath =
-        reportType === 'fireReports'    ? n.fireReport :
-        reportType === 'otherEmergency' ? n.otherEmergency :
-        reportType === 'emsReports'     ? n.ems :
-        reportType === 'smsReports'     ? n.sms : null;
-
-      if (srcPath) {
-        await firebase.database().ref(`${srcPath}/${incidentId}`).update({
-          status: 'Ongoing',
-          assignedStationAccounts: selected
-        });
-      }
-
-      // 3) UI updates (non-fatal)
-      try {
-        setStatusEverywhere?.(incidentId, reportType, 'Ongoing');
-        const okCount = selected.length - failures.length;
-        showToast?.(`Assigned to ${okCount} station${okCount>1?'s':''}${failures.length?` (${failures.length} failed)`:''}`);
-      } catch(_) {}
-
-      // Close modals
+      await writeAssignmentsDirect({ incidentId, reportType, reportObject, targets });
       queueMicrotask(() => {
         closeAssignModal();
         closeDetailsModal();
       });
-
-      // If there were partial failures, inform the user
-      if (failures.length) {
-        console.warn('Some assignments failed:', failures);
-        alert(`${failures.length} assignment(s) failed. Check console for details.`);
-      }
-
     } catch (err) {
-      console.error('[assign] error:', err);
-      alert(err.message || 'Failed to assign.');
+      console.error('[assign][legacy] error:', err);
+      alert(err?.message || 'Failed to assign.');
     } finally {
       if (btn) { btn.disabled = false; btn.classList.remove('opacity-60', 'cursor-wait'); }
     }
   }, { once: true });
 })();
+
+/* =========================================================
+ * STATUS FAN-OUT (unchanged behavior for central lists)
+ * ========================================================= */
+
+/* =========================================================
+ * FAN-OUT STATUS TO THE 3 STATIONS (station-only, no "central")
+ * - Updates station AllReport item + any FFAccount copies that exist
+ * - Skips non-existent nodes (no rule errors)
+ * - Clear toast summary
+ * ========================================================= */
+
+function __allReportTypePath(reportType, base) {
+  return reportType === 'fireReports'    ? `${base}/FireReport`
+       : reportType === 'otherEmergency' ? `${base}/OtherEmergencyReport`
+       : reportType === 'emsReports'     ? `${base}/EmergencyMedicalServicesReport`
+       :                                   `${base}/SmsReport`;
+}
+
+async function __updateStationAllReportStatus(stationRoot, reportType, incidentId, statusLabel) {
+  const base     = `${stationRoot}/AllReport`;
+  const typePath = __allReportTypePath(reportType, base);
+  const itemRef  = firebase.database().ref(`${typePath}/${incidentId}`);
+
+  try {
+    const snap = await itemRef.once('value');
+    if (!snap.exists()) return { ok: false, reason: 'not_found' };
+    await itemRef.child('status').set(statusLabel);
+    return { ok: true };
+  } catch (e) {
+    console.warn('[fanOut][AllReport]', stationRoot, e?.code || e?.message || e);
+    return { ok: false, reason: e?.code || 'write_failed' };
+  }
+}
+
+async function __updateStationFFCopies(stationRoot, reportType, incidentId, statusLabel) {
+  const baseFFA  = accountsBase(stationRoot);
+  const typeNode = typeNodeFor(reportType);
+  let touched = 0;
+  const writes = [];
+
+  try {
+    // single shape
+    const singlePath = `${baseFFA}/AllReport/${typeNode}/${incidentId}`;
+    const singleSnap = await firebase.database().ref(singlePath).once('value');
+    if (singleSnap.exists()) {
+      writes.push(firebase.database().ref(`${singlePath}/status`).set(statusLabel));
+      touched++;
+    }
+
+    // multi shape
+    const listSnap = await firebase.database().ref(baseFFA).once('value');
+    const obj  = listSnap.val() || {};
+    const keys = Object.keys(obj).filter(k => obj[k] && typeof obj[k] === 'object');
+    for (const k of keys) {
+      const path = `${baseFFA}/${k}/AllReport/${typeNode}/${incidentId}`;
+      const s = await firebase.database().ref(path).once('value');
+      if (s.exists()) {
+        writes.push(firebase.database().ref(`${path}/status`).set(statusLabel));
+        touched++;
+      }
+    }
+
+    if (writes.length) await Promise.allSettled(writes);
+    return { ok: true, touched };
+  } catch (e) {
+    console.warn('[fanOut][FFCopies]', stationRoot, e?.code || e?.message || e);
+    return { ok: false, reason: e?.code || 'write_failed', touched };
+  }
+}
+
+async function fanOutStatus(incidentId, reportType, newStatus) {
+  const statusLabel = capStatus(newStatus);
+  const results = [];
+
+  for (const stationRoot of STATION_ROOTS) {
+    const allReport = await __updateStationAllReportStatus(stationRoot, reportType, incidentId, statusLabel);
+    const ffCopies  = await __updateStationFFCopies(stationRoot, reportType, incidentId, statusLabel);
+    const okForStation = !!(allReport.ok || (ffCopies.touched > 0)); // station counted if any copy updated
+    results.push({ stationRoot, okForStation, allReport, ffCopies });
+  }
+
+  const okStations = results.filter(r => r.okForStation).length;
+  return { okStations, totalStations: STATION_ROOTS.length, details: results };
+}
+
+async function updateReportStatus(incidentId, reportType, newStatus) {
+  try {
+    const summary = await fanOutStatus(incidentId, reportType, newStatus);
+
+    // reflect in UI
+    setStatusEverywhere(incidentId, reportType, newStatus);
+    closeDetailsModal?.();
+
+    // toast summary
+    if (summary.okStations === 0) {
+      showToast?.('No station copy updated (item not found or blocked by rules).');
+    } else if (summary.okStations < summary.totalStations) {
+      showToast?.(`Status set to ${capStatus(newStatus)} (${summary.okStations}/${summary.totalStations} stations updated).`);
+    } else {
+      showToast?.(`Status updated to ${capStatus(newStatus)} across all stations.`);
+    }
+  } catch (err) {
+    console.error('[status] fanOut failed:', err);
+    alert('Failed to update status. See console for details.');
+  }
+}
+
+// Simple toast helper (safe even if called many times)
+function showToast(message, duration = 3000) {
+  // remove any existing toast
+  const old = document.getElementById('globalToast');
+  if (old) old.remove();
+
+  const div = document.createElement('div');
+  div.id = 'globalToast';
+  div.textContent = message;
+  div.className =
+    'fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-sm px-4 py-2 rounded shadow-lg z-50';
+  document.body.appendChild(div);
+
+  setTimeout(() => div.remove(), duration);
+}
 
 
 
@@ -3351,16 +3697,14 @@ function setStatusEverywhere(incidentId, reportType, newStatus) {
     reportType === 'emsReports'     ? emsReports :
     reportType === 'smsReports'     ? smsReports : null;
 
-  const disp = capStatus(newStatus);      // normalize label
-  const col  = statusColor(disp);         // pick the right Tailwind color
+  const disp = capStatus(newStatus);
+  const col  = statusColor(disp);
 
-  // update cached array
   if (arr) {
     const i = arr.findIndex(r => r.id === incidentId);
     if (i !== -1) arr[i] = { ...arr[i], status: disp };
   }
 
-  // update the per-type row
   const typeRow = document.getElementById(`reportRow${incidentId}`);
   if (typeRow) {
     const rpt = JSON.parse(typeRow.getAttribute('data-report') || '{}');
@@ -3373,7 +3717,6 @@ function setStatusEverywhere(incidentId, reportType, newStatus) {
     }
   }
 
-  // update the merged All Reports row
   const allRow = document.querySelector(
     `#allReportsBody tr[data-id="${incidentId}"][data-type="${reportType}"]`
   );
@@ -3388,125 +3731,13 @@ function setStatusEverywhere(incidentId, reportType, newStatus) {
   renderAllReports?.();
 }
 
-// --- helpers ---
-function typeNodeFor(reportType) {
-  return reportType === 'fireReports'      ? 'FireReport'
-       : reportType === 'otherEmergency'   ? 'OtherEmergencyReport'
-       : reportType === 'emsReports'       ? 'EmergencyMedicalServicesReport'
-       : reportType === 'smsReports'       ? 'SmsReport'
-       : 'Unknown';
-}
+/* ---------- misc helpers reused above ---------- */
 
 function normalizeStations(val) {
-  // Accepts ['A','B'] or {A:true,B:true} or null
   if (!val) return [];
   if (Array.isArray(val)) return val.filter(Boolean);
   if (typeof val === 'object') return Object.keys(val).filter(Boolean);
   return [];
-}
-
-// --- NEW: fan-out status everywhere ---
-async function fanOutStatus(incidentId, reportType, newStatus) {
-  const ALL           = 'TagumCityCentralFireStation/AllReport';
-  const FF_ROOT       = 'TagumCityCentralFireStation/FireFighter/AllFireFighterAccount';
-  const typeNode      = typeNodeFor(reportType);
-
-  // central collection path by report type
-  const centralPath =
-      reportType === 'fireReports'    ? `${ALL}/FireReport`
-    : reportType === 'otherEmergency' ? `${ALL}/OtherEmergencyReport`
-    : reportType === 'emsReports'     ? `${ALL}/EmergencyMedicalServicesReport`
-    : reportType === 'smsReports'     ? `${ALL}/SmsReport`
-    : null;
-
-  if (!centralPath || typeNode === 'Unknown') return;
-
-  const db   = firebase.database();
-  const ref  = db.ref(`${centralPath}/${incidentId}`);
-
-  // 1) try to read assigned station list from the central record
-  let stations = [];
-  try {
-    const snap = await ref.child('assignedStationAccounts').once('value');
-    stations = normalizeStations(snap.val());
-  } catch (_) {}
-
-  // 2) fallback: scan firefighter accounts and include only stations where the incident exists
-  if (stations.length === 0) {
-    try {
-      const ffSnap = await db.ref(FF_ROOT).once('value');
-      ffSnap.forEach(st => {
-        const stKey = st.key;
-        const exists = ffSnap.child(`${stKey}/AllReport/${typeNode}/${incidentId}`).exists();
-        if (exists) stations.push(stKey);
-      });
-      stations = Array.from(new Set(stations));
-    } catch (_) {}
-  }
-
-  // 3) build one big update
-  const updates = {};
-  // central
-  updates[`${centralPath}/${incidentId}/status`] = newStatus;
-  // optionally timestamp:
-  // updates[`${centralPath}/${incidentId}/updatedAt`] = Date.now();
-
-  // each station that holds this incident
-  stations.forEach(stKey => {
-    updates[`${FF_ROOT}/${stKey}/AllReport/${typeNode}/${incidentId}/status`] = newStatus;
-    // optional mirror timestamp:
-    // updates[`${FF_ROOT}/${stKey}/AllReport/${typeNode}/${incidentId}/updatedAt`] = Date.now();
-  });
-
-  if (Object.keys(updates).length === 0) return;
-
-  await db.ref().update(updates);
-}
-
-// --- REPLACE your existing updateReportStatus with this ---
-async function updateReportStatus(incidentId, reportType, newStatus) {
-  const n = nodes();
-  if (!n) return;
-
-  // optimistic UI (what you already do)
-  const row = document.getElementById(`reportRow${incidentId}`);
-  if (row) {
-    const report = JSON.parse(row.getAttribute('data-report') || '{}');
-    report.status = newStatus;
-    row.setAttribute('data-report', JSON.stringify(report));
-    const statusCell = row.querySelector('.status');
-    if (statusCell) {
-      statusCell.innerText = newStatus;
-      statusCell.className = `px-4 py-2 status text-${statusColor(newStatus)}-500`;
-    }
-  }
-
-  // figure central per-type path (for canonical write)
-  let path = null;
-  if (reportType === 'fireReports')      path = n.fireReport;
-  else if (reportType === 'otherEmergency') path = n.otherEmergency;
-  else if (reportType === 'emsReports')     path = n.ems;
-  else if (reportType === 'smsReports')     path = n.sms;
-
-  try {
-    if (path) {
-      // write central first (keeps your listeners happy even if the fan-out fails)
-      await firebase.database().ref(`${path}/${incidentId}`).update({ status: newStatus });
-    }
-
-    // now fan-out to all firefighter accounts that carry this incident
-    await fanOutStatus(incidentId, reportType, newStatus);
-
-    // local UI refreshes
-    try {
-      setStatusEverywhere?.(incidentId, reportType, newStatus);
-      closeDetailsModal?.();
-      showToast?.(`Status updated to ${newStatus} (mirrored to assigned stations)`);
-    } catch(_) {}
-  } catch (err) {
-    console.error('[status] update failed:', err);
-    alert(err?.message || 'Failed to update status.');
-  }
 }
 
 function capStatus(s) {
@@ -3519,6 +3750,44 @@ function capStatus(s) {
        : s;
 }
 
+/* ---------- Constants + helpers you defined (tidied) ---------- */
+
+const STATION_ROOTS = [
+  'CapstoneFlare/CanocotanFireStation',
+  'CapstoneFlare/LaFilipinaFireStation',
+  'CapstoneFlare/MabiniFireStation'
+];
+
+const LABEL_BY_ROOT = {
+  'CapstoneFlare/CanocotanFireStation':  'Canocotan Fire Station',
+  'CapstoneFlare/LaFilipinaFireStation': 'La Filipina Fire Station',
+  'CapstoneFlare/MabiniFireStation':     'Mabini Fire Station'
+};
+
+// default account-key name if the station uses multi-account shape
+function fallbackAccountKeyFor(root) {
+  const last = (root || '').split('/').filter(Boolean).pop();
+  return last === 'CanocotanFireStation'  ? 'CanocotanFireFighterAccount'
+       : last === 'LaFilipinaFireStation' ? 'LaFilipinaFireFighterAccount'
+       : last === 'MabiniFireStation'     ? 'MabiniFireFighterAccount'
+       : 'FireFighterAccount';
+}
+
+// Per-station FF account keys (literal, no computed array keys)
+const ACCOUNTS_BY_STATION = {
+  'CapstoneFlare/CanocotanFireStation':  ['CanocotanFireFighterAccount'],
+  'CapstoneFlare/LaFilipinaFireStation': ['LaFilipinaFireFighterAccount'],
+  'CapstoneFlare/MabiniFireStation':     ['MabiniFireFighterAccount']
+};
+
+// Helpers
+function otherStationRoots() {
+  return STATION_ROOTS.filter(r => r !== currentStationRoot());
+}
+
+
+
+
 function closeDetailsModal() {
   document.getElementById('detailsModal').classList.add('hidden');
 }
@@ -3529,8 +3798,7 @@ function closeDetailsModal() {
  * ========================================================= */
 
 function stationNodesForReportType(reportType) {
-  const STATION_ROOT = 'TagumCityCentralFireStation';
-  const ALL = `${STATION_ROOT}/AllReport`;
+  const ALL  = `${CURRENT_STATION_ROOT}/AllReport`;
 
   const serviceReportType =
     reportType === 'fireReports' ? 'fire' :
@@ -3554,7 +3822,7 @@ function stationNodesForReportType(reportType) {
 }
 
 function repliesRef(incidentId, _reportType) {
-  const ALL = 'TagumCityCentralFireStation/AllReport';
+  const ALL  = `${CURRENT_STATION_ROOT}/AllReport`;
   // Central list of user replies; filter by incidentId
   return firebase.database()
     .ref(`${ALL}/ReplyMessage`)
@@ -3563,7 +3831,7 @@ function repliesRef(incidentId, _reportType) {
 }
 
 function stationResponsesQuery(incidentId, _reportType) {
-  const ALL = 'TagumCityCentralFireStation/AllReport';
+   const ALL  = `${CURRENT_STATION_ROOT}/AllReport`;
   return firebase.database()
     .ref(`${ALL}/ResponseMessage`)
     .orderByChild('incidentId')
@@ -3673,8 +3941,6 @@ function groupMessages(raw) {
     }]
   }));
 }
-
-
 
 
 function fetchThread(incidentId, reportType) {
@@ -3881,7 +4147,6 @@ function renderBubble(msg) {
   // Scroll to the bottom
   thread.scrollTop = thread.scrollHeight;
 }
-
 
 
 

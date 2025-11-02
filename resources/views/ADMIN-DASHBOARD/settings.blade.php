@@ -124,7 +124,7 @@
                     <img src="{{ asset('images/settings_black.png') }}" alt="General Options" class="w-6 h-6 mr-3">
                     <a href="javascript:void(0)">General Options</a>
                 </li>
-
+{{--
                   <!-- Manage Application-->
                 <li id="manageApplicationOptions" onclick="toggleTab('manage-application-tab', 'manageApplicationOptions')" class="hover:text-gray-400 flex items-center">
                     <img src="{{ asset('images/manage_application.png') }}" alt="Manage Application" class="w-6 h-6 mr-3">
@@ -135,7 +135,7 @@
                 <li id="manageUsersOptions" onclick="toggleTab('manage-users-tab', 'manageUsersOptions')" class="hover:text-gray-400 flex items-center">
                     <img src="{{ asset('images/manage_users.png') }}" alt="Manage Users" class="w-6 h-6 mr-3">
                     <a href="javascript:void(0)">Manage Users</a>
-                </li>
+                </li> --}}
 
 
                 <!-- Frontend Posting -->
