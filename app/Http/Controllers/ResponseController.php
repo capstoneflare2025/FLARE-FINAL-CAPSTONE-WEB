@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\FirebaseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 
 class ResponseController extends Controller
 {
@@ -69,76 +70,72 @@ class ResponseController extends Controller
             return response()->json(['success' => false, 'message' => 'Failed to update report status'], 500);
         }
     }
+public function storeResponse(Request $request)
+{
+    try {
+        $data = $request->validate([
+            'prefix'          => 'required|string',
+            'reportType'      => 'required|string|in:fire,fireReports,otherEmergency,emsReports,emergencyMedicalServices,sms,smsReports',
+            'incidentId'      => 'required|string',
+            'responseMessage' => 'required|string',
+            'reporterName'    => 'nullable|string',
+            'contact'         => 'nullable|string',
+        ]);
 
-    /**
-     * POST: Store a station reply into the incident thread + ResponseMessage list.
-     * Body: { prefix, reportType, incidentId, responseMessage, reporterName?, contact?, fireStationName? }
-     */
-    public function storeResponse(Request $request)
-    {
-        try {
-            $data = $request->validate([
-                'prefix'          => 'required|string',
-                'reportType'      => 'required|string|in:fire,fireReports,otherEmergency,emsReports,emergencyMedicalServices,sms,smsReports',
-                'incidentId'      => 'required|string',
-                'responseMessage' => 'required|string',
-                'reporterName'    => 'nullable|string',
-                'contact'         => 'nullable|string',
-                'fireStationName' => 'nullable|string',
-            ]);
+        // ✅ Pull station info from session (set at login)
+        $stationKey   = Session::get('station');        // e.g. CapstoneFlare/LaFilipinaFireStation
+        $stationLabel = Session::get('station_label');  // e.g. La Filipina Fire Station
 
-            $normalizedType = $this->normalizeReportType($data['reportType']);
-
-            $now   = now();
-            $nowMs = (int) round(microtime(true) * 1000);
-
-            $fsNice  = $data['fireStationName'] ?? 'Tagum City Central Fire Station';
-            $contact = $data['contact'] ?? '';
-            $name    = $data['reporterName'] ?? '';
-
-            // 1) Thread message (stored under incident)
-            $threadMsg = [
-                'type'         => 'response',
-                'text'         => $data['responseMessage'],
-                'imageBase64'  => null,
-                'audioBase64'  => null,
-                'uid'          => null,
-                'reporterName' => $name,
-                'contact'      => $contact,
-                'date'         => $now->format('Y-m-d'),
-                'time'         => $now->format('H:i:s'),
-                'timestamp'    => $nowMs,
-                'isRead'       => false,
-            ];
-
-            $ok1 = $this->firebaseService->storeUnifiedMessage(
-                $data['prefix'],           // retained for compatibility
-                $normalizedType,
-                $data['incidentId'],
-                $threadMsg
-            );
-
-            // 2) Station-wide ResponseMessage entry (AllReport/ResponseMessage)
-            $summary = [
-                'uid'             => null,
-                'fireStationName' => $fsNice,
-                'incidentId'      => $data['incidentId'],
-                'reporterName'    => $name,
-                'contact'         => $contact,
-                'responseMessage' => $data['responseMessage'],
-                'responseDate'    => $now->format('Y-m-d'),
-                'responseTime'    => $now->format('H:i:s'),
-                'imageBase64'     => null,
-                'timestamp'       => $nowMs,
-                'isRead'          => false,
-            ];
-
-            $ok2 = $this->firebaseService->storeStationResponseSummary($data['prefix'], $summary);
-
-            return response()->json(['success' => ($ok1 && $ok2)]);
-        } catch (\Throwable $e) {
-            Log::error("Error storing response: {$e->getMessage()}", ['trace' => $e->getTraceAsString()]);
-            return response()->json(['success' => false, 'message' => 'Failed to store response'], 500);
+        if (!$stationKey || !$stationLabel) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Station session missing. Please log in again.'
+            ], 403);
         }
+
+        $normalizedType = $this->normalizeReportType($data['reportType']);
+        $now = now();
+
+        $contact = $data['contact'] ?? '';
+        $name    = $data['reporterName'] ?? '';
+
+        // ✅ Include station details automatically
+        $threadMsg = [
+            'incidentId'      => $data['incidentId'],
+            'type'            => 'station',
+            'text'            => $data['responseMessage'],
+            'imageBase64'     => null,
+            'audioBase64'     => null,
+            'uid'             => null,
+            'reporterName'    => $name,
+            'contact'         => $contact,
+            'fireStationName' => $stationLabel, // 👈 pulled from Auth session
+            'stationNode'     => $stationKey,   // 👈 CapstoneFlare/LaFilipinaFireStation
+            'date'            => $now->format('Y-m-d'),
+            'time'            => $now->format('H:i:s'),
+            'timestamp'       => $now->getTimestamp() * 1000,
+            'isRead'          => false,
+        ];
+
+        // ✅ Store under that specific station path
+        $ok = $this->firebaseService->storeUnifiedMessage(
+            $stationKey,       // <– prefix now is actual station node
+            $normalizedType,
+            $data['incidentId'],
+            $threadMsg
+        );
+
+        return response()->json(['success' => $ok]);
+    } catch (\Throwable $e) {
+        Log::error("Error storing response: {$e->getMessage()}", [
+            'trace' => $e->getTraceAsString()
+        ]);
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to store response'
+        ], 500);
     }
+}
+
+
 }

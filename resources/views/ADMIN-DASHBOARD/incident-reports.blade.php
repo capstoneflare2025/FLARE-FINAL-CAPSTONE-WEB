@@ -223,7 +223,7 @@
                 data-key="fireReports|{{ $report['id'] }}"
                 onclick="openMessageModal('{{ $report['id'] }}', 'fireReports')">
                 <img src="{{ asset('images/message.png') }}" alt="Message" class="w-6 h-6">
-                <span class="msg-badge hidden">0</span>
+                <span class="msg-badge hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">1</span>
                 </a>
 
                 @if(isset($report['latitude'], $report['longitude']) && $report['latitude'] !== null && $report['longitude'] !== null)
@@ -259,7 +259,7 @@
   <!-- =========================================================
   = Section: Other Emergency Incidents
   ========================================================= -->
-  <div id="otherEmergencySection" class="bg-white p-6 shadow rounded-lg mt-6 hidden">
+  <div id="otherEmergencySection" class="bg-white p-6 shadow rounded-lg hidden">
     <h2 class="text-xl font-semibold text-gray-700 mb-4">Other Emergency Incidents</h2>
     <div class="table-wrap max-h-96 overflow-y-auto">
       <table class="min-w-full table-auto  table-min">
@@ -343,7 +343,7 @@
                 data-key="otherEmergency|{{ $report['id'] }}"
                 onclick="openMessageModal('{{ $report['id'] }}', 'otherEmergency')">
                 <img src="{{ asset('images/message.png') }}" alt="Message" class="w-6 h-6">
-                <span class="msg-badge hidden">0</span>
+                <span class="msg-badge hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">1</span>
                 </a>
 
                 @if(isset($report['latitude'], $report['longitude']) && $report['latitude'] !== null && $report['longitude'] !== null)
@@ -374,7 +374,7 @@
   <!-- =========================================================
   = Section: Emergency Medical Services (EMS)
   ========================================================= -->
-  <div id="emsSection" class="bg-white p-6 shadow rounded-lg mt-6 hidden">
+  <div id="emsSection" class="bg-white p-6 shadow rounded-lg hidden">
     <h2 class="text-xl font-semibold text-gray-700 mb-4">Emergency Medical Services</h2>
     <div class="table-wrap max-h-96 overflow-y-auto">
       <table class="min-w-full table-auto table-min">
@@ -452,7 +452,7 @@
                 data-key="emsReports|{{ $report['id'] }}"
                 onclick="openMessageModal('{{ $report['id'] }}', 'emsReports')">
                 <img src="{{ asset('images/message.png') }}" alt="Message" class="w-6 h-6">
-                <span class="msg-badge hidden">0</span>
+                <span class="msg-badge hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">1</span>
                 </a>
 
                 @if(isset($report['latitude'], $report['longitude']) && $report['latitude'] !== null && $report['longitude'] !== null)
@@ -474,7 +474,7 @@
   <!-- =========================================================
   = Section: SMS Reports
   ========================================================= -->
-  <div id="smsReportsSection" class="bg-white p-6 shadow rounded-lg mt-6 hidden">
+  <div id="smsReportsSection" class="bg-white p-6 shadow rounded-lg hidden">
     <h2 class="text-xl font-semibold text-gray-700 mb-4">SMS Reports</h2>
     <div class="table-wrap max-h-96 overflow-y-auto">
       <table class="min-w-full table-auto table-min">
@@ -547,7 +547,7 @@
                 data-key="smsReports|{{ $report['id'] }}"
                 onclick="openMessageModal('{{ $report['id'] }}', 'smsReports')">
                 <img src="{{ asset('images/message.png') }}" alt="Message" class="w-6 h-6">
-                <span class="msg-badge hidden">0</span>
+                <span class="msg-badge hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">1</span>
                 </a>
 
                 @if(!is_null($lat) && !is_null($lng))
@@ -578,7 +578,7 @@
  <!-- =========================================================
   = Section: Fire Fighter Chat Table (Name, Contact, Action)
   ========================================================= -->
-<div id="fireFighterChatSection" class="bg-white p-6 shadow rounded-lg mt-6 hidden">
+<div id="fireFighterChatSection" class="bg-white p-6 shadow rounded-lg hidden">
   <h2 class="text-xl font-semibold text-gray-700 mb-4">Fire Fighter Chat Reports</h2>
   <div class="table-wrap max-h-96 overflow-y-auto">
     <table class="min-w-full table-auto table-min">
@@ -628,7 +628,7 @@
             data-ff-account="{{ $report['accountKey'] }}"
             onclick="openFFChatMessageModal('{{ $report['accountKey'] }}')">
             <img src="{{ asset('images/message.png') }}" alt="Message" class="w-6 h-6">
-            <span class="msg-badge hidden">0</span>
+            <span >1</span>
             </a>
 
 
@@ -1111,8 +1111,10 @@ document.addEventListener("DOMContentLoaded", () => {
   renderAllReports();
   safeInitFireFighterAccounts();
   hardLoadFF();
-
-
+    // Delay a bit to ensure DOM and reports fully rendered
+  setTimeout(() => {
+    ensureMessageBadges();
+  }, 1000); // wait 1 second
 
 });
 
@@ -2035,61 +2037,6 @@ function applyRealtimePatchEms(snapshot) {
 
 
 
-/* =========================================================
- * RENDERING: SMS TABLE (ADD/RENDER HELPERS)
- * ========================================================= */
-
-function renderSmsReports(highlightId = null) {
-  const body = document.getElementById('smsReportsBody');
-  if (!body) return;
-
-  const arr = asArray(smsReports).slice();
-  arr.sort((a,b) => parseDT(b.date, b.time, b.timestamp ?? b.createdAt ?? b.updatedAt) -
-                    parseDT(a.date, a.time, a.timestamp ?? a.createdAt ?? a.updatedAt));
-
-  const rows = arr.map((report, index) => {
-    const status = capStatus(report.status || 'Pending');
-    const color  = statusColor(status);
-    const hasLL  = report.latitude != null && report.longitude != null;
-    const dt     = `${report.date || 'N/A'} ${to24h(report.time) || report.time || 'N/A'}`;
-    const locBtn = hasLL
-      ? `<a href="javascript:void(0);" onclick="openLocationModal(${report.latitude}, ${report.longitude})">
-           <img src="{{ asset('images/location.png') }}" alt="Location" class="w-6 h-6">
-         </a>` : '';
-    return `
-      <tr id="reportRow${report.id}" class="border-b ${highlightId && report.id===highlightId ? 'bg-yellow-100' : ''}"
-          data-report='${JSON.stringify(report)}' data-type="smsReports">
-        <td class="px-4 py-2">${index + 1}</td>
-        <td class="px-4 py-2">${report.location || 'N/A'}</td>
-        <td class="px-4 py-2">${dt}</td>
-        <td class="px-4 py-2 status text-${color}-500">${status}</td>
-        <td class="px-4 py-2 space-x-2 flex items-center">
-        <a href="javascript:void(0);" onclick="openMessageModal('${report.id}', 'smsReports')">
-            <img src="{{ asset('images/message.png') }}" alt="Message" class="w-6 h-6">
-        </a>
-        ${locBtn}
-        <a href="javascript:void(0);" onclick="openDetailsModal('${report.id}', 'smsReports')">
-            <img src="{{ asset('images/details.png') }}" alt="Details" class="w-6 h-6">
-        </a>
-        </td>
-
-      </tr>`;
-  }).join('');
-
-  body.innerHTML = rows;
-}
-
-function insertNewSmsRow(report) {
-      report.__root = window.CURRENT_STATION_ROOT; // <— add
-  report.date = report.date || new Date().toISOString().slice(0,10);
-  report.time = report.time || new Date().toTimeString().slice(0,5);
-  const idx = (smsReports || []).findIndex(r => r.id === report.id);
-  if (idx === -1) smsReports.unshift(report);
-  else smsReports[idx] = { ...smsReports[idx], ...report };
-  renderSmsReports(report.id);
-    ensureMessageBadges();
-}
-
 
 /* =========================================================
  * PATCH HELPERS (FIRE / OTHER)
@@ -2223,48 +2170,7 @@ function insertNewEmsRow(report) {
   renderEmsTable(report.id);
 }
 
-function renderEmsTable(highlightId = null) {
-  const body = document.getElementById('emsBody');
-  if (!body) return;
 
-  const arr = asArray(emsReports).slice();
-  // sort newest → oldest using datetime
-  function parseDateTime(dateStr, timeStr) {
-    const [day, month, year] = (dateStr || '').split('/');
-    const normalizedYear = year && year.length === 2 ? '20' + year : year;
-    const dt = new Date(`${normalizedYear}-${month}-${day}T${timeStr || '00:00'}`);
-    return dt.getTime() || 0;
-  }
-  arr.sort((a,b) => parseDateTime(b.date, b.reportTime) - parseDateTime(a.date, a.reportTime));
-
-  body.innerHTML = arr.map((report, index) => {
-    const status = capStatus(report.status || 'Pending');
-    const color  = statusColor(status);
-    const hasLL  = report.latitude != null && report.longitude != null;
-
-    return `
-      <tr id="reportRow${report.id}" class="border-b ${highlightId && report.id===highlightId ? 'bg-yellow-100' : ''}"
-          data-report='${JSON.stringify(report)}' data-type="emsReports">
-        <td class="px-4 py-2">${index + 1}</td>
-        <td class="px-4 py-2">${report.type || 'N/A'}</td>
-        <td class="px-4 py-2">${report.exactLocation || 'N/A'}</td>
-        <td class="px-4 py-2">${report.date || 'N/A'} ${to24h(report.reportTime) || report.reportTime || 'N/A'}</td>
-        <td class="px-4 py-2 status text-${color}-500">${status}</td>
-        <td class="px-4 py-2 space-x-2 flex items-center">
-        <a href="javascript:void(0);" onclick="openMessageModal('${report.id}', 'emsReports')">
-            <img src="{{ asset('images/message.png') }}" alt="Message" class="w-6 h-6">
-        </a>
-        ${hasLL ? `<a href="javascript:void(0);" onclick="openLocationModal(${report.latitude}, ${report.longitude})">
-                    <img src="{{ asset('images/location.png') }}" alt="Location" class="w-6 h-6">
-                    </a>` : ''}
-        <a href="javascript:void(0);" onclick="openDetailsModal('${report.id}', 'emsReports')">
-            <img src="{{ asset('images/details.png') }}" alt="Details" class="w-6 h-6">
-        </a>
-        </td>
-      </tr>`;
-  }).join('');
-  ensureMessageBadges();
-}
 
 function renderSortedReports(reportsArray, reportType, highlightId = null) {
   const tableBodyId = reportType === 'fireReports' ? 'fireReportsBody' : 'otherEmergencyTableBody';
@@ -2301,9 +2207,14 @@ function renderSortedReports(reportsArray, reportType, highlightId = null) {
         <td class="px-4 py-2 status text-${color}-500">${statusTxt}</td>
         <td class="px-4 py-2 space-x-2 flex items-center">
           <!-- Message should always be present -->
-          <a href="javascript:void(0);" onclick="openMessageModal('${report.id}', 'fireReports')">
+          <a href="javascript:void(0);"
+            class="msg-btn relative inline-flex items-center"
+            data-key="fireReports|${report.id}"
+            onclick="openMessageModal('${report.id}', 'fireReports')">
             <img src="{{ asset('images/message.png') }}" alt="Message" class="w-6 h-6">
-          </a>
+            <span class="msg-badge hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">1</span>
+            </a>
+
           ${hasLL ? `
             <a href="javascript:void(0);" onclick="openLocationModal(${lat}, ${lng})">
               <img src="{{ asset('images/location.png') }}" alt="Location" class="w-6 h-6">
@@ -2313,26 +2224,32 @@ function renderSortedReports(reportsArray, reportType, highlightId = null) {
           </a>
         </td>`;
     } else {
-      // OTHER EMERGENCY: make order = Message → (Location) → Details
-      cells = `
-        <td class="px-4 py-2">${index + 1}</td>
-        <td class="px-4 py-2">${report.exactLocation || 'N/A'}</td>
-        <td class="px-4 py-2">${report.emergencyType || 'N/A'}</td>
-        <td class="px-4 py-2">${report.date || 'N/A'} ${to24h(report.reportTime) || report.reportTime || 'N/A'}</td>
-        <td class="px-4 py-2 status text-${color}-500">${statusTxt}</td>
-        <td class="px-4 py-2 space-x-2 flex items-center">
-          <a href="javascript:void(0);" onclick="openMessageModal('${report.id}', 'otherEmergency')">
-            <img src="{{ asset('images/message.png') }}" alt="Message" class="w-6 h-6">
-          </a>
-          ${hasLL ? `
-            <a href="javascript:void(0);" onclick="openLocationModal(${lat}, ${lng})">
-              <img src="{{ asset('images/location.png') }}" alt="Location" class="w-6 h-6">
-            </a>` : ''}
-          <a href="javascript:void(0);" onclick="openDetailsModal('${report.id}', 'otherEmergency')">
-            <img src="{{ asset('images/details.png') }}" alt="Details" class="w-6 h-6">
-          </a>
-        </td>`;
-    }
+  // OTHER EMERGENCY: make order = Message → (Location) → Details
+  cells = `
+    <td class="px-4 py-2">${index + 1}</td>
+    <td class="px-4 py-2">${report.exactLocation || 'N/A'}</td>
+    <td class="px-4 py-2">${report.emergencyType || 'N/A'}</td>
+    <td class="px-4 py-2">${report.date || 'N/A'} ${to24h(report.reportTime) || report.reportTime || 'N/A'}</td>
+    <td class="px-4 py-2 status text-${color}-500">${statusTxt}</td>
+    <td class="px-4 py-2 space-x-2 flex items-center">
+      <a href="javascript:void(0);"
+         class="msg-btn relative inline-flex items-center"
+         data-key="otherEmergency|${report.id}"
+         onclick="openMessageModal('${report.id}', 'otherEmergency')">
+         <img src="{{ asset('images/message.png') }}" alt="Message" class="w-6 h-6">
+         <span class="msg-badge hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">1</span>
+      </a>
+
+      ${hasLL ? `
+        <a href="javascript:void(0);" onclick="openLocationModal(${lat}, ${lng})">
+          <img src="{{ asset('images/location.png') }}" alt="Location" class="w-6 h-6">
+        </a>` : ''}
+      <a href="javascript:void(0);" onclick="openDetailsModal('${report.id}', 'otherEmergency')">
+        <img src="{{ asset('images/details.png') }}" alt="Details" class="w-6 h-6">
+      </a>
+    </td>`;
+}
+
 
     row.innerHTML = cells;
     fragment.appendChild(row);
@@ -2343,6 +2260,117 @@ function renderSortedReports(reportsArray, reportType, highlightId = null) {
   tableBody.style.visibility = 'visible';
   ensureMessageBadges();
 }
+
+
+function renderEmsTable(highlightId = null) {
+  const body = document.getElementById('emsBody');
+  if (!body) return;
+
+  const arr = asArray(emsReports).slice();
+  // sort newest → oldest using datetime
+  function parseDateTime(dateStr, timeStr) {
+    const [day, month, year] = (dateStr || '').split('/');
+    const normalizedYear = year && year.length === 2 ? '20' + year : year;
+    const dt = new Date(`${normalizedYear}-${month}-${day}T${timeStr || '00:00'}`);
+    return dt.getTime() || 0;
+  }
+  arr.sort((a,b) => parseDateTime(b.date, b.reportTime) - parseDateTime(a.date, a.reportTime));
+
+  body.innerHTML = arr.map((report, index) => {
+    const status = capStatus(report.status || 'Pending');
+    const color  = statusColor(status);
+    const hasLL  = report.latitude != null && report.longitude != null;
+
+    return `
+      <tr id="reportRow${report.id}" class="border-b ${highlightId && report.id===highlightId ? 'bg-yellow-100' : ''}"
+          data-report='${JSON.stringify(report)}' data-type="emsReports">
+        <td class="px-4 py-2">${index + 1}</td>
+        <td class="px-4 py-2">${report.type || 'N/A'}</td>
+        <td class="px-4 py-2">${report.exactLocation || 'N/A'}</td>
+        <td class="px-4 py-2">${report.date || 'N/A'} ${to24h(report.reportTime) || report.reportTime || 'N/A'}</td>
+        <td class="px-4 py-2 status text-${color}-500">${status}</td>
+        <td class="px-4 py-2 space-x-2 flex items-center">
+      <a href="javascript:void(0);"
+    class="msg-btn relative inline-flex items-center"
+    data-key="emsReports|${report.id}"
+    onclick="openMessageModal('${report.id}', 'emsReports')">
+    <img src="{{ asset('images/message.png') }}" alt="Message" class="w-6 h-6">
+    <span class="msg-badge hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">1</span>
+    </a>
+
+        ${hasLL ? `<a href="javascript:void(0);" onclick="openLocationModal(${report.latitude}, ${report.longitude})">
+                    <img src="{{ asset('images/location.png') }}" alt="Location" class="w-6 h-6">
+                    </a>` : ''}
+        <a href="javascript:void(0);" onclick="openDetailsModal('${report.id}', 'emsReports')">
+            <img src="{{ asset('images/details.png') }}" alt="Details" class="w-6 h-6">
+        </a>
+        </td>
+      </tr>`;
+  }).join('');
+  ensureMessageBadges();
+}
+
+
+/* =========================================================
+ * RENDERING: SMS TABLE (ADD/RENDER HELPERS)
+ * ========================================================= */
+
+function renderSmsReports(highlightId = null) {
+  const body = document.getElementById('smsReportsBody');
+  if (!body) return;
+
+  const arr = asArray(smsReports).slice();
+  arr.sort((a,b) => parseDT(b.date, b.time, b.timestamp ?? b.createdAt ?? b.updatedAt) -
+                    parseDT(a.date, a.time, a.timestamp ?? a.createdAt ?? a.updatedAt));
+
+  const rows = arr.map((report, index) => {
+    const status = capStatus(report.status || 'Pending');
+    const color  = statusColor(status);
+    const hasLL  = report.latitude != null && report.longitude != null;
+    const dt     = `${report.date || 'N/A'} ${to24h(report.time) || report.time || 'N/A'}`;
+    const locBtn = hasLL
+      ? `<a href="javascript:void(0);" onclick="openLocationModal(${report.latitude}, ${report.longitude})">
+           <img src="{{ asset('images/location.png') }}" alt="Location" class="w-6 h-6">
+         </a>` : '';
+    return `
+      <tr id="reportRow${report.id}" class="border-b ${highlightId && report.id===highlightId ? 'bg-yellow-100' : ''}"
+          data-report='${JSON.stringify(report)}' data-type="smsReports">
+        <td class="px-4 py-2">${index + 1}</td>
+        <td class="px-4 py-2">${report.location || 'N/A'}</td>
+        <td class="px-4 py-2">${dt}</td>
+        <td class="px-4 py-2 status text-${color}-500">${status}</td>
+        <td class="px-4 py-2 space-x-2 flex items-center">
+       <a href="javascript:void(0);"
+    class="msg-btn relative inline-flex items-center"
+    data-key="smsReports|${report.id}"
+    onclick="openMessageModal('${report.id}', 'smsReports')">
+    <img src="{{ asset('images/message.png') }}" alt="Message" class="w-6 h-6">
+   <span class="msg-badge hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">1</span>
+    </a>
+
+        ${locBtn}
+        <a href="javascript:void(0);" onclick="openDetailsModal('${report.id}', 'smsReports')">
+            <img src="{{ asset('images/details.png') }}" alt="Details" class="w-6 h-6">
+        </a>
+        </td>
+
+      </tr>`;
+  }).join('');
+
+  body.innerHTML = rows;
+}
+
+function insertNewSmsRow(report) {
+      report.__root = window.CURRENT_STATION_ROOT; // <— add
+  report.date = report.date || new Date().toISOString().slice(0,10);
+  report.time = report.time || new Date().toTimeString().slice(0,5);
+  const idx = (smsReports || []).findIndex(r => r.id === report.id);
+  if (idx === -1) smsReports.unshift(report);
+  else smsReports[idx] = { ...smsReports[idx], ...report };
+  renderSmsReports(report.id);
+    ensureMessageBadges();
+}
+
 
 
 function hasLL(r = {}) {
@@ -3905,61 +3933,65 @@ function fetchThread(incidentId, reportType) {
   const thread = document.getElementById('fireMessageThread');
   thread.innerHTML = '';
 
-  const qResp = stationResponsesQuery(incidentId, reportType);
-  const refRep = repliesRef(incidentId, reportType);
-  const pulls = [];
+  const nn = stationNodesForReportType(reportType);
+  if (!nn) return;
 
-  if (qResp) {
-    pulls.push(
-      qResp.once('value').then(snap => {
-        const out = [];
-        snap.forEach(c => {
-          __seenResponseKeys.add(c.key); // prevent duplicate when live listener fires
-          const v = c.val() || {};
-          if (v.responseMessage || v.imageBase64 || v.audioBase64) {
-            const ts = v.timestamp || Date.parse(`${v.responseDate || ''} ${v.responseTime || ''}`) || 0;
-            out.push({ type: 'response', text: v.responseMessage || '', imageBase64: v.imageBase64 || '', audioBase64: v.audioBase64 || '', timestamp: ts });
-          }
-        });
-        return out;
-      })
-    );
-  }
+  // Path to messages node
+  const messagesRef = firebase.database().ref(`${nn.repliesBase}/${incidentId}/messages`);
 
-  if (refRep) {
-    pulls.push(
-      refRep.once('value').then(snap => {
-        const out = [];
-        snap.forEach(c => {
-          __seenReplyKeys.add(c.key); // prevent duplicate when live listener fires
-          const v = c.val() || {};
-          const text = v.text || v.replyMessage || '';
-          const hasAny = text || v.imageBase64 || v.audioBase64;
-          const isReply = String(v.type || 'reply').toLowerCase() === 'reply';
-          if (isReply && hasAny) {
-            out.push({
-              type: 'reply',
-              text,
-              imageBase64: v.imageBase64 || '',
-              audioBase64: v.audioBase64 || '',
-              timestamp: v.timestamp || 0,
-              _key: c.key,
-            });
-          }
-        });
-        return out;
-      })
-    );
-  }
+  messagesRef.once('value').then(snap => {
+    const out = [];
+    snap.forEach(c => {
+      const v = c.val() || {};
+      const hasAny = v.text || v.imageBase64 || v.audioBase64;
+      if (!hasAny) return;
 
-  Promise.all(pulls).then(chunks => {
-    storedMessages = ([]).concat(...chunks);
-    storedMessages.sort((a,b) => (a.timestamp||0)-(b.timestamp||0));
-    storedMessages = groupMessages(storedMessages);
+      out.push({
+        type: v.type || 'reply',
+        text: v.text || '',
+        imageBase64: v.imageBase64 || '',
+        audioBase64: v.audioBase64 || '',
+        timestamp: v.timestamp || 0,
+        reporterName: v.reporterName || '',
+        fireStationName: v.fireStationName || ''
+      });
+    });
+
+    out.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+    storedMessages = groupMessages(out);
     renderMessages(storedMessages);
     thread.scrollTop = thread.scrollHeight;
   });
 }
+
+
+function subscribeThread(incidentId, reportType) {
+  const nn = stationNodesForReportType(reportType);
+  if (!nn) return;
+
+  const messagesRef = firebase.database().ref(`${nn.repliesBase}/${incidentId}/messages`);
+  messagesRef.on('child_added', snap => {
+    const v = snap.val() || {};
+    const hasAny = v.text || v.imageBase64 || v.audioBase64;
+    if (!hasAny) return;
+
+    renderBubble({
+      type: v.type || 'reply',
+      text: v.text || '',
+      imageBase64: v.imageBase64 || '',
+      audioBase64: v.audioBase64 || '',
+      timestamp: v.timestamp || Date.now(),
+      reporterName: v.reporterName || '',
+      fireStationName: v.fireStationName || ''
+    });
+
+    const thread = document.getElementById('fireMessageThread');
+    thread.scrollTop = thread.scrollHeight;
+  });
+
+  liveListeners.push(messagesRef);
+}
+
 
 
 function renderMessages(messages) {
@@ -3969,83 +4001,23 @@ function renderMessages(messages) {
   messages.forEach(renderBubble);
 }
 
-function subscribeThread(incidentId, reportType) {
-  // ---- Live user replies (central list) ----
-  const repQ = repliesRef(incidentId, reportType);
-  if (repQ) {
-    repQ.on('child_added', snap => {
-      if (__seenReplyKeys.has(snap.key)) return;
-      __seenReplyKeys.add(snap.key);
-
-      const v = snap.val() || {};
-      const text = v.text || v.replyMessage || '';
-      const hasAny = text || v.imageBase64 || v.audioBase64;
-      const isReply = String(v.type || 'reply').toLowerCase() === 'reply';
-      if (!isReply || !hasAny) return;
-
-      renderBubble({
-        type: 'reply',
-        text,
-        imageBase64: v.imageBase64 || '',
-        audioBase64: v.audioBase64 || '',
-        timestamp: v.timestamp || 0
-      });
-
-      const thread = document.getElementById('fireMessageThread');
-      thread.scrollTop = thread.scrollHeight;
-
-      if (!v.isRead) snap.ref.child('isRead').set(true).catch(()=>{});
-    });
-    liveListeners.push(repQ);
-  }
-
-  // ---- Live station responses (central list) ----
-  const respQ = stationResponsesQuery(incidentId, reportType);
-  if (respQ) {
-    respQ.on('child_added', snap => {
-      if (__seenResponseKeys.has(snap.key)) return;
-      __seenResponseKeys.add(snap.key);
-
-      const v = snap.val() || {};
-      const text = v.responseMessage || '';
-      const hasAny = text || v.imageBase64 || v.audioBase64;
-      if (!hasAny) return;
-
-      const ts =
-        v.timestamp ||
-        Date.parse(`${v.responseDate || ''} ${v.responseTime || ''}`) ||
-        Date.now();
-
-      renderBubble({
-        type: 'response',
-        text,
-        imageBase64: v.imageBase64 || '',
-        audioBase64: v.audioBase64 || '',
-        timestamp: ts
-      });
-
-      const thread = document.getElementById('fireMessageThread');
-      thread.scrollTop = thread.scrollHeight;
-    });
-    liveListeners.push(respQ);
-  }
-}
 
 
 function renderBubble(msg) {
   const thread = document.getElementById('fireMessageThread');
   const nowTs = Number(msg.timestamp || Date.now());
 
-  // Always create a new bubble for each message, even if the timestamps are the same
+  // Choose bubble color and alignment
+  const isStation = (msg.type === 'response' || msg.type === 'station');
   const shell = document.createElement('div');
-  shell.className = (msg.type === 'response')
-    ? "message bg-blue-500 text-white p-4 rounded-lg my-2 max-w-xs ml-auto text-right"
-    : "message bg-gray-300 text-black p-4 rounded-lg my-2 max-w-xs mr-auto text-left";
+  shell.className = isStation
+    ? "message bg-blue-500 text-white p-4 rounded-lg my-2 max-w-xs ml-auto text-right shadow-md"
+    : "message bg-gray-300 text-black p-4 rounded-lg my-2 max-w-xs mr-auto text-left shadow-sm";
 
   const content = document.createElement('div');
   content.className = 'bubble-content';
 
-  // Create each part of the message (text, image, audio)
+  // Message body (text, image, or audio)
   const parts = Array.isArray(msg.parts)
     ? msg.parts
     : [{
@@ -4056,13 +4028,14 @@ function renderBubble(msg) {
         text: msg.text || ''
     }];
 
-  // Append content to the bubble based on message type
   parts.forEach(p => {
     if (p.kind === 'text' && p.text) {
       const t = document.createElement('div');
       t.textContent = p.text;
       t.style.whiteSpace = 'pre-line';
       t.style.wordBreak  = 'break-word';
+      t.style.fontSize = '1rem';
+      t.style.fontWeight = '500';
       content.appendChild(t);
     }
     if (p.kind === 'image' && p.imageBase64) {
@@ -4090,21 +4063,19 @@ function renderBubble(msg) {
     }
   });
 
-  // Add timestamp
+  // Timestamp (24-hour format)
   const small = document.createElement('small');
-  small.className = 'bubble-ts text-xs block mt-1 opacity-80';
-  small.textContent = new Date(nowTs).toLocaleString();
+  small.className = 'bubble-ts text-xs block mt-2 opacity-80';
+  const formattedTime = new Date(nowTs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+  small.textContent = formattedTime;
 
-  // Append the content and timestamp to the shell
   shell.appendChild(content);
   shell.appendChild(small);
-
-  // Append the message bubble to the thread
   thread.appendChild(shell);
-
-  // Scroll to the bottom
   thread.scrollTop = thread.scrollHeight;
 }
+
+
 
 
 
@@ -4295,64 +4266,111 @@ async function updateTwoLeafletMaps({ reportLat, reportLng, stationLat, stationL
 function closeLocationModal() {
   document.getElementById('locationModal').classList.add('hidden');
 }
-
-// ==== Message badge wiring ====
+// ==== Message badge wiring (diagnostic edition, isRead version) ====
 const __badgeSubs = new Map(); // key -> ref
+
 function setBadgeCount(key, count) {
   const el = document.querySelector(`[data-key="${key}"] .msg-badge`);
   if (!el) return;
-  if (count > 0) {
-    el.textContent = count > 99 ? '99+' : String(count);
-    el.classList.remove('hidden');
-  } else {
+
+  if (count <= 0) {
     el.classList.add('hidden');
+    return;
   }
+
+  el.textContent = count > 99 ? '99+' : String(count);
+  el.classList.remove('hidden');
 }
 
-// Count unread replies (type=='reply' && !isRead)
 function subscribeBadge(key) {
   if (__badgeSubs.has(key)) return;
+
   const [type, incidentId] = key.split('|');
+  const base = `${CURRENT_STATION_ROOT}/AllReport`;
+  const typePath =
+    type === 'fireReports' ? 'FireReport' :
+    type === 'otherEmergency' ? 'OtherEmergencyReport' :
+    type === 'emsReports' ? 'EmergencyMedicalServicesReport' :
+    'SmsReport';
 
-  const q = repliesRef(incidentId, type);
-  if (!q) return;
+  // ✅ Correct path: messages are INSIDE each report
+  const refPath = `${base}/${typePath}/${incidentId}/messages`;
+  const ref = firebase.database().ref(refPath);
 
-  const handler = q.on('value', snap => {
+  console.log(`[BadgeSubscribe] Watching (fixed): ${refPath}`);
+
+  const handler = ref.on('value', snap => {
     let unread = 0;
+    let total = 0;
+
     snap.forEach(c => {
       const v = c.val() || {};
-      const isReply = String(v.type || 'reply').toLowerCase() === 'reply';
-      if (isReply && !v.isRead) unread++;
+      total++;
+
+      const isReply = v.type === 'reply';
+      const isUnread = v.isRead === false || v.isRead === "false";
+
+      // ✅ Real badge count only for Fire and Other Emergency
+      if ((type === 'fireReports' || type === 'otherEmergency') && isReply && isUnread) {
+        unread++;
+      }
     });
-    setBadgeCount(key, unread);
+
+    // ✅ Fire & OtherEmergency = real count
+    // ✅ EMS & SMS = default 1 for testing
+    const displayCount =
+      (type === 'fireReports' || type === 'otherEmergency')
+        ? unread
+        : 1;
+
+    console.log(`[BadgeResult] ${type}|${incidentId}: total=${total}, unread=${unread}, display=${displayCount}`);
+    setBadgeCount(key, displayCount);
   });
 
-  __badgeSubs.set(key, { ref: q, handler });
+  __badgeSubs.set(key, { ref, handler });
 }
 
-
-// Call this after (re)rendering any table that contains message buttons
 function ensureMessageBadges() {
   document.querySelectorAll('.msg-btn[data-key]').forEach(a => {
     subscribeBadge(a.getAttribute('data-key'));
   });
 }
 
-// Optional: mark all unread as read when opening the thread
+/* =========================================================
+ * MARK THREAD READ (so badge updates)
+ * ========================================================= */
 async function markThreadRead(incidentId, reportType) {
-  const q = repliesRef(incidentId, reportType);
-  if (!q) return;
-  const snap = await q.once('value');
+  const base = `${CURRENT_STATION_ROOT}/AllReport`;
+  const typePath =
+    reportType === 'fireReports' ? 'FireReport' :
+    reportType === 'otherEmergency' ? 'OtherEmergencyReport' :
+    reportType === 'emsReports' ? 'EmergencyMedicalServicesReport' :
+    'SmsReport';
+
+  const refPath = `${base}/${typePath}/${incidentId}/messages`;
+  const ref = firebase.database().ref(refPath);
+
+  const snapshot = await ref.once('value');
+
   const updates = {};
-  snap.forEach(c => {
-    const v = c.val() || {};
-    const isReply = String(v.type || 'reply').toLowerCase() === 'reply';
-    if (isReply && !v.isRead) updates[`${c.key}/isRead`] = true;
+  snapshot.forEach(child => {
+    const key = child.key;
+    const val = child.val();
+    // Mark only replies that are currently unread
+    if (val && val.type === 'reply' && (val.isRead === false || val.isRead === "false")) {
+      updates[`${key}/isRead`] = true;
+    }
   });
-  if (Object.keys(updates).length) {
-    await q.ref.update(updates);
+
+  if (Object.keys(updates).length > 0) {
+    await ref.update(updates);
+    console.log(`[markThreadRead] Updated ${Object.keys(updates).length} replies to isRead=true for ${reportType}|${incidentId}`);
+  } else {
+    console.log(`[markThreadRead] No unread replies found for ${reportType}|${incidentId}`);
   }
 }
+
+
 
 </script>
 

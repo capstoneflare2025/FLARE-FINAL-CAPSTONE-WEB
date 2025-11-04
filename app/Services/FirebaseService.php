@@ -277,42 +277,23 @@ class FirebaseService
      * Path:
      *   {Station}/AllReport/{FireReport|OtherEmergencyReport|EmergencyMedicalServicesReport|SmsReport}/{incidentId}/messages/{pushKey}
      */
-    public function storeUnifiedMessage(
-        string $prefix,
-        string $reportType,
-        string $incidentId,
-        array $message
-    ): bool {
-        try {
-            $base = $this->baseNode($prefix, $reportType);
-            $path = "{$base}/{$incidentId}/messages";
-            $this->database->getReference($path)->push()->set($message);
-            return true;
-        } catch (\Throwable $e) {
-            Log::error("storeUnifiedMessage error: " . $e->getMessage());
-            return false;
-        }
+   public function storeUnifiedMessage(
+    string $prefix,
+    string $reportType,
+    string $incidentId,
+    array $message
+): bool {
+    try {
+        $base = $this->baseNode($prefix, $reportType);
+        $path = "{$base}/{$incidentId}/messages";
+        $this->database->getReference($path)->push()->set($message);
+        return true;
+    } catch (\Throwable $e) {
+        Log::error("storeUnifiedMessage error: " . $e->getMessage());
+        return false;
     }
+}
 
-    /* ---------------------------------------------------------
-     * Station inbox summary
-     * --------------------------------------------------------- */
-
-    /**
-     * Path:
-     *   {Station}/AllReport/ResponseMessage/{pushKey}
-     */
-    public function storeStationResponseSummary(string $prefix, array $payload): bool
-    {
-        try {
-            $path = $this->stationRoot . '/ResponseMessage';
-            $this->database->getReference($path)->push()->set($payload);
-            return true;
-        } catch (\Throwable $e) {
-            Log::error("storeStationResponseSummary error: " . $e->getMessage());
-            return false;
-        }
-    }
 
     /* ---------------------------------------------------------
      * SMS reports

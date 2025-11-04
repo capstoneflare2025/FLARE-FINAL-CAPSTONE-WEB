@@ -359,6 +359,79 @@
     }
     const db = firebase.database();
 
+
+     // ==== Real-time message badge system (isRead + station type) ====
+  const __badgeSubs = new Map();
+
+  function setBadgeCount(key, count) {
+    const el = document.querySelector(`[data-key="${key}"] .msg-badge`);
+    if (!el) return;
+    if (count <= 0) {
+      el.classList.add('hidden');
+    } else {
+      el.textContent = count > 99 ? '99+' : String(count);
+      el.classList.remove('hidden');
+    }
+  }
+
+  function subscribeBadge(key) {
+    if (__badgeSubs.has(key)) return;
+
+    const [type, incidentId] = key.split('|');
+    const base = `${CURRENT_STATION_ROOT}/AllReport`;
+    const typePath =
+      type === 'fireReports' ? 'FireReport' :
+      type === 'otherEmergency' ? 'OtherEmergencyReport' :
+      type === 'emsReports' ? 'EmergencyMedicalServicesReport' :
+      'SmsReport';
+
+    const refPath = `${base}/${typePath}/${incidentId}/messages`;
+    const ref = firebase.database().ref(refPath);
+
+    console.log(`[BadgeSubscribe] Watching (real-time): ${refPath}`);
+
+    let unread = 0;
+
+    const updateBadge = async () => {
+      const snap = await ref.once('value');
+      unread = 0;
+      snap.forEach(c => {
+        const v = c.val() || {};
+        if (
+          (type === 'fireReports' || type === 'otherEmergency') &&
+          v.type === 'station' &&
+          (v.isRead === false || v.isRead === 'false')
+        ) {
+          unread++;
+        }
+      });
+      const displayCount =
+        (type === 'fireReports' || type === 'otherEmergency') ? unread : 1;
+      console.log(`[BadgeResult] ${type}|${incidentId}: unread=${unread}`);
+      setBadgeCount(key, displayCount);
+    };
+
+    // Initial load
+    updateBadge();
+
+    // Live updates for adds/changes
+    ref.on('child_added', updateBadge);
+    ref.on('child_changed', updateBadge);
+
+    __badgeSubs.set(key, { ref });
+  }
+
+  function ensureMessageBadges() {
+    document.querySelectorAll('.msg-btn[data-key]').forEach(a => {
+      subscribeBadge(a.getAttribute('data-key'));
+    });
+  }
+
+  // ✅ Call ensureMessageBadges once page content has loaded
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(ensureMessageBadges, 2000);
+  });
+
     // Sounds
     fireSound = new Audio("{{ asset('sound/alert.mp3') }}");
     emergencySound = new Audio("{{ asset('sound/emergency.mp3') }}");
