@@ -173,6 +173,40 @@ tr:hover {
 }
 
 
+/* Base modal styling */
+#assignModal .bg-white {
+  width: 90%;        /* Modal width is 90% of the viewport width */
+  max-width: 600px;  /* Max width is set to 600px */
+  padding: 20px;     /* Adequate padding for content */
+}
+
+/* Adjustments for smaller screens */
+@media (max-width: 768px) {
+  #assignModal .bg-white {
+    width: 95%;       /* On small screens, the modal will take up 95% of the width */
+    max-width: 500px; /* Limit the width to 500px for better mobile readability */
+  }
+}
+
+/* Adjustments for very small screens */
+@media (max-width: 480px) {
+  #assignModal .bg-white {
+    width: 100%;      /* On extremely small screens (mobile), it will use 100% width */
+    max-width: 400px; /* Ensure it doesn't get too wide */
+  }
+}
+
+/* Optionally: Make the modal content more compact on smaller screens */
+@media (max-width: 768px) {
+  #assignModal .text-lg {
+    font-size: 1rem;  /* Reduce the title size on smaller screens */
+  }
+  #assignModal .text-sm {
+    font-size: 0.875rem; /* Adjust smaller text size */
+  }
+}
+
+
     </style>
 </head>
 <body resetReloadTimer()>

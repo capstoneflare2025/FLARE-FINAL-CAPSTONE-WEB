@@ -51,9 +51,6 @@
     </div>
     </form>
 
-
-
-
     <button onclick="closeAssignModal()"
             class="absolute top-3 right-4 text-gray-400 hover:text-gray-700 text-2xl leading-none">&times;</button>
   </div>
