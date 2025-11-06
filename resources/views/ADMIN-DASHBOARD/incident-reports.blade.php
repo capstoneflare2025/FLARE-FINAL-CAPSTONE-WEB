@@ -28,7 +28,7 @@
         class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden"
         style="z-index: 60;">
 
-    <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-lg relative">
+    <div class="bg-white rounded-lg p-6 w-full max-w-[900px] md:max-w-[1000px] shadow-lg relative">
         <h3 class="text-lg font-semibold mb-4 text-gray-800">Assign to Fire Station</h3>
 
         <p class="text-sm text-gray-600 mb-3">
@@ -698,30 +698,52 @@
   </div>
 </div>
 
-<!-- ===========================
-     FF CHAT: DETAILS MODAL
-=========================== -->
 <div id="ffChatDetailsModal" class="fixed inset-0 z-50 hidden bg-black/50 flex items-center justify-center">
-  <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-lg relative">
-    <h3 class="text-lg font-semibold mb-4 text-gray-800">Station Details</h3>
-    <div class="space-y-2 text-gray-700">
-      <div><strong>Key:</strong> <span id="ffChatDetKey"></span></div>
-      <div><strong>Name:</strong> <span id="ffChatDetName"></span></div>
-      <div><strong>Contact:</strong> <span id="ffChatDetContact"></span></div>
-      <div><strong>Email:</strong> <span id="ffChatDetEmail"></span></div>
+  <div class="bg-white rounded-lg p-6 w-full max-w-3xl shadow-lg relative">
+    <h3 class="text-lg font-semibold mb-4 text-gray-800">Fire Fighter Details</h3>
+
+    <div class="flex space-x-4">
+      <!-- Left side: Fire Fighter Details and Reports Summary -->
+      <div class="w-1/2">
+        <div class="space-y-2 text-gray-700">
+          <div><strong>Name:</strong> <span id="ffChatDetName"></span></div>
+          <div><strong>Contact:</strong> <span id="ffChatDetContact"></span></div>
+          <div><strong>Email:</strong> <span id="ffChatDetEmail"></span></div>
+        </div>
+
+        <div id="ffChatDetExtra" class="mt-4 text-sm text-gray-600"></div>
+
+        <!-- Reports Summary -->
+        <div class="mt-5">
+          <h4 class="font-semibold text-gray-800 mb-2">Reports Summary</h4>
+          <div id="ffChatDetReportsSummary" class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm"></div>
+        </div>
+      </div>
+
+      <!-- Right side: Recent and Ongoing Reports -->
+      <div class="w-1/2">
+        <!-- Recent Reports -->
+        <div class="mt-4">
+          <h4 class="font-semibold text-gray-800 mb-2">Recent Reports</h4>
+          <div id="ffChatDetRecent" class="space-y-3 text-sm max-h-60 overflow-y-auto"></div> <!-- Scrollable area -->
+        </div>
+
+        <!-- Ongoing Reports -->
+        <div class="mt-4">
+          <h4 class="font-semibold text-gray-800 mb-2">Ongoing Reports</h4>
+          <div id="ffChatDetOngoing" class="text-sm text-gray-700 max-h-60 overflow-y-auto"></div> <!-- Scrollable area -->
+        </div>
+      </div>
     </div>
-    <div id="ffChatDetExtra" class="mt-4 text-sm text-gray-600"></div>
+
     <div class="mt-5 flex justify-end gap-2">
-      <button class="px-4 py-2 rounded bg-blue-600 text-white"
-              onclick="openFFChatMessageModal(document.getElementById('ffChatDetKey').textContent)">Message</button>
-      <button class="px-4 py-2 rounded bg-gray-200"
-              onclick="closeFFChatDetailsModal()">Close</button>
+      <button class="px-4 py-2 rounded bg-blue-600 text-white" onclick="openFFChatMessageModal()">Message</button>
+      <button class="px-4 py-2 rounded bg-gray-200" onclick="closeFFChatDetailsModal()">Close</button>
     </div>
-    <button onclick="closeFFChatDetailsModal()"
-            class="absolute top-3 right-4 text-gray-400 hover:text-gray-700 text-2xl leading-none">&times;</button>
+
+    <button onclick="closeFFChatDetailsModal()" class="absolute top-3 right-4 text-gray-400 hover:text-gray-700 text-2xl leading-none">&times;</button>
   </div>
 </div>
-
 
 
   <!-- =========================================================
@@ -1077,7 +1099,6 @@
         </div>
 
 
-
     </div>
 
     <!-- Action Buttons -->
@@ -1254,24 +1275,234 @@ function initUnreadBadge() {
     });
 }
 
+
 /* =========================================================
- * DETAILS MODAL
+ * DETAILS MODAL — richer details + bugfix for _$('#...') -> _$('...')
+ * Expects (optional) fields in the modal:
+ *   ffChatDetKey, ffChatDetName, ffChatDetContact, ffChatDetEmail, ffChatDetExtra
+ *   ffChatDetHQ, ffChatDetLive, ffChatDetOngoing
  * ========================================================= */
+// Pretty labels for the UI
+const REPORT_LABELS = {
+  FireReport: 'Fire Report',
+  OtherEmergencyReport: 'Other Emergency Report',
+  EmergencyMedicalServicesReport: 'Emergency Medical Services Report',
+  SmsReport: 'SMS Report'
+};
+
+
+// Normalize free-form statuses to buckets we care about
+function normalizeStatusBucket(s='') {
+  const x = String(s).trim().toLowerCase().replace(/\s|_/g,'');
+  if (/(on)?going|inprogress|active|responding/.test(x)) return 'ongoing';
+  if (/pending|new|queued|open|received|reported|unassigned/.test(x)) return 'pending';
+  if (/done|closed|resolved|complete|completed|finished/.test(x)) return 'completed';
+  return 'other';
+}
+
+
+ // ---------- Helpers ----------
+function normalizeStatus(s='') {
+  return String(s).replace(/[\s-_]+/g,'').toLowerCase(); // 'On-Going' -> 'ongoing'
+}
+function toNum(n, d=0) {
+  const v = Number(n);
+  return Number.isFinite(v) ? v : d;
+}
+
+async function getReportsSummary(limitPerType = 5) {
+  const base = `${FF_ACCOUNT_PATH}/AllReport`;
+  const db   = firebase.database();
+
+  // shape: counts[type] = { total, pending, ongoing, completed, other }
+  const counts = {};
+  const recent = {};      // recent[type] = [ { id, statusRaw, status, timestamp, lat, lng } ]
+  const ongoingFlat = []; // [ {type, id, lat, lng, timestamp} ]
+
+  for (const type of REPORT_TYPES) {
+    counts[type] = { total:0, pending:0, ongoing:0, completed:0, other:0 };
+    recent[type] = [];
+
+    let snap;
+    try { snap = await db.ref(`${base}/${type}`).once('value'); }
+    catch (e) { console.warn('[details] read failed for', type, e); continue; }
+
+    if (!snap.exists()) continue;
+
+    const buf = [];
+    snap.forEach(c => {
+      const v  = c.val() || {};
+      const ts = Number(v.timestamp) || 0;
+
+      const statusRaw = v.status ?? '';
+      const status = normalizeStatusBucket(statusRaw);
+
+      const lat = parseFloat(v.latitude ?? v.lat);
+      const lng = parseFloat(v.longitude ?? v.lng);
+
+      counts[type].total += 1;
+      if (status === 'pending')   counts[type].pending   += 1;
+      else if (status === 'ongoing') counts[type].ongoing   += 1;
+      else if (status === 'completed') counts[type].completed += 1;
+      else counts[type].other += 1;
+
+      buf.push({
+        id: c.key,
+        statusRaw,
+        status,
+        timestamp: ts,
+        lat: Number.isFinite(lat) ? lat : null,
+        lng: Number.isFinite(lng) ? lng : null
+      });
+
+      // Always include ongoing items in the flat list, with or without coords
+      if (status === 'ongoing') {
+        ongoingFlat.push({
+          type,
+          id: c.key,
+          lat: Number.isFinite(lat) ? lat : null,
+          lng: Number.isFinite(lng) ? lng : null,
+          timestamp: ts
+        });
+      }
+    });
+
+    buf.sort((a,b)=> b.timestamp - a.timestamp);
+    recent[type] = buf.slice(0, limitPerType);
+  }
+
+  // newest ongoing first
+  ongoingFlat.sort((a,b)=> (b.timestamp||0) - (a.timestamp||0));
+
+  return { counts, recent, ongoingFlat };
+}
+
+
 async function openFFChatDetailsModal(){
   try{
-    const s = await firebase.database().ref(FF_ACCOUNT_PATH).once('value');
-    const v = s.val() || {};
-    _$('#ffChatDetKey')      && (_$('#ffChatDetKey').textContent      = 'FireFighterAccount');
-    _$('#ffChatDetName')     && (_$('#ffChatDetName').textContent     = _safe(v.name,'FireFighterAccount'));
-    _$('#ffChatDetContact')  && (_$('#ffChatDetContact').textContent  = _safe(v.contact));
-    _$('#ffChatDetEmail')    && (_$('#ffChatDetEmail').textContent    = _safe(v.email,'—'));
-    _$('#ffChatDetExtra')    && (_$('#ffChatDetExtra').textContent    = v.notes ? String(v.notes) : '');
-    _show('ffChatDetailsModal');
-  } catch(e){
-    console.error('[FF Chat][Details] load failed', e);
-    alert('Could not load station details.');
+    if (!firebase?.apps?.length || typeof firebase.database !== 'function') {
+      throw new Error('Firebase not initialized yet.');
+    }
+
+    const STATION_ROOT = window.CURRENT_STATION_ROOT;
+    if (!STATION_ROOT || typeof STATION_ROOT !== 'string') {
+      console.warn('[Details] Missing CURRENT_STATION_ROOT:', STATION_ROOT);
+      alert('Station context is missing. Please pick a station first.');
+      return;
+    }
+    const FF_ACCOUNT_PATH = `${STATION_ROOT}/FireFighter/FireFighterAccount`;
+
+    // Elements
+    const setText = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt ?? ''; };
+    const extraEl = document.getElementById('ffChatDetExtra');
+    const sumEl   = document.getElementById('ffChatDetReportsSummary');
+    const recentEl= document.getElementById('ffChatDetRecent');
+    const ongoEl  = document.getElementById('ffChatDetOngoing');
+
+    // Optional: quick placeholders while loading
+    if (sumEl)    sumEl.innerHTML    = '<div class="text-gray-500 text-sm">Loading…</div>';
+    if (recentEl) recentEl.innerHTML = '<div class="text-gray-500 text-sm">Loading…</div>';
+    if (ongoEl)   ongoEl.innerHTML   = '<div class="text-gray-500 text-sm">Loading…</div>';
+
+    // 1) Load FireFighterAccount basics
+    let accVal = {};
+    try {
+      const accSnap = await firebase.database().ref(FF_ACCOUNT_PATH).once('value');
+      accVal = accSnap.val() || {};
+    } catch (e) {
+      console.warn('[Details] FF account read failed', e);
+      alert('Could not read Firefighter account for this station.');
+      return;
+    }
+
+    setText('ffChatDetName',    accVal.name || '');
+    setText('ffChatDetContact', accVal.contact || '');
+    setText('ffChatDetEmail',   accVal.email || '');
+    if (extraEl) extraEl.textContent = accVal.notes ? String(accVal.notes) : '';
+
+    // 2) Reports: summary / recent / ongoing (robust)
+    const summary = await getReportsSummary(5); // uses the function you already included
+
+  // Summary grid (add Pending / Completed)
+if (sumEl) {
+  sumEl.innerHTML = REPORT_TYPES.map(type => {
+    const c = summary.counts[type] || { total:0, pending:0, ongoing:0, completed:0, other:0 };
+    const label = REPORT_LABELS[type] || type;
+    return `
+      <div class="border rounded p-3">
+        <div class="font-medium leading-snug break-words whitespace-normal">${label}</div>
+
+        <br>
+        <div class="text-gray-600 text-xs mt-1">Total: ${c.total}</div>
+        <div class="text-gray-600 text-xs">Pending: ${c.pending}</div>
+        <div class="text-gray-600 text-xs">Ongoing: ${c.ongoing}</div>
+        <div class="text-gray-600 text-xs">Completed: ${c.completed}</div>
+      </div>`;
+  }).join('');
+}
+
+// Recent (use pretty label + raw status string for fidelity)
+if (recentEl) {
+  const sections = REPORT_TYPES.map(type => {
+    const items = summary.recent[type] || [];
+    if (!items.length) return '';
+    const rows = items.map(r => {
+      const when = r.timestamp ? new Date(r.timestamp).toLocaleString() : '—';
+      return `<li class="flex items-start justify-between gap-3">
+        <span class="leading-snug break-words whitespace-normal">${r.id}</span>
+        <span class="text-xs text-gray-600">${r.statusRaw || r.status || '—'}</span>
+        <span class="text-xs text-gray-500">${when}</span>
+      </li>`;
+    }).join('');
+    const label = REPORT_LABELS[type] || type;
+    return `<div>
+      <div class="text-sm font-semibold mb-1">${label}</div>
+      <ul class="space-y-1">${rows}</ul>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  recentEl.innerHTML = sections || '<div class="text-gray-500 text-sm">No recent reports.</div>';
+}
+
+// Ongoing list (show even when coords missing)
+if (ongoEl) {
+  const list = summary.ongoingFlat || [];
+  if (!list.length) {
+    ongoEl.innerHTML = '<div class="text-gray-500">None</div>';
+  } else {
+    const html = list.map(o => {
+      const when  = o.timestamp ? new Date(o.timestamp).toLocaleString() : '—';
+      const coord = (Number.isFinite(o.lat) && Number.isFinite(o.lng))
+        ? `${o.lat.toFixed(6)}, ${o.lng.toFixed(6)}`
+        : '—';
+      const label = REPORT_LABELS[o.type] || o.type;
+      return `<li class="flex items-start justify-between gap-3">
+        <span class="leading-snug break-words whitespace-normal">
+        ${label} <span class="opacity-70">(${o.id})</span>
+        </span>
+
+        <span class="text-xs text-gray-600">${coord}</span>
+        <span class="text-xs text-gray-500">${when}</span>
+      </li>`;
+    }).join('');
+    ongoEl.innerHTML = `<ul class="space-y-1">${html}</ul>
+      <div class="mt-2">
+        <button class="text-blue-600 text-sm underline" onclick="openFFChatLocationModal()">View on map</button>
+      </div>`;
   }
 }
+
+
+    // 3) Show modal after data is ready
+    _show('ffChatDetailsModal');
+
+  } catch(e){
+    console.error('[FF Chat][Details] load failed', e);
+    alert(e?.message || 'Could not load station details.');
+  }
+}
+
+
 function closeFFChatDetailsModal(){ _hide('ffChatDetailsModal'); }
 
 /* =========================
@@ -1328,9 +1559,12 @@ function renderThread(items){
 
 /* Open modal: single listener ordered by timestamp, appends to array */
 async function openFFChatMessageModal(){
+
   try{
     if (!firebase?.apps?.length || typeof firebase.database !== 'function')
       throw new Error('Firebase not initialized yet.');
+
+      closeFFChatDetailsModal()
 
     const modal  = _el('ffChatMessageModal');
     const nameEl = _el('ffChatMsgStationName');
@@ -1423,7 +1657,6 @@ function closeFFChatMessageModal(){
     }
   });
 })();
-
 
 
 /* =========================================================

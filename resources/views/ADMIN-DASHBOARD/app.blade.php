@@ -134,6 +134,44 @@
           font-size:12px; border-radius:9999px; background:#ef4444; color:#fff; text-align:center; padding:0 5px;
         }
         .msg-badge.hidden{ display:none; }
+/* To make Recent and Ongoing Reports scrollable */
+#ffChatDetRecent, #ffChatDetOngoing {
+  max-height: 300px;  /* Adjust the height as needed */
+  overflow-y: auto;   /* Allow vertical scrolling */
+}
+
+/* Table styling for Recent and Ongoing Reports */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background-color: #f1f1f1;
+  font-weight: bold;
+}
+
+tr:hover {
+  background-color: #f9f9f9;
+}
+
+@media (max-width: 768px) {
+  /* Adjust layout for smaller screens */
+  .flex {
+    flex-direction: column;
+  }
+
+  #ffChatDetReportsSummary {
+    grid-template-columns: 1fr;
+  }
+}
+
 
     </style>
 </head>
