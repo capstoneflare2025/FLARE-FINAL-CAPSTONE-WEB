@@ -447,134 +447,81 @@ function removeToast(id) {
         });
     });
     }
-
-
-   async function listenForMessageReplies() {
-    const stationKey = window.__STATION_KEY__?.trim();  // Get station key from window
+async function listenForMessageReplies() {
+    const stationKey = window.__STATION_KEY__?.trim();
     if (!stationKey) {
         console.warn("[FLARE] No station key defined. Skipping message listeners.");
         return;
     }
 
-    // Normalize the stationKey, remove any accidental "CapstoneFlare/" prefix if present
     const normalizedStationKey = stationKey.replace(/^CapstoneFlare\//, "");
-
-    // Firebase path for FireReport, OtherEmergencyReport, EmergencyMedicalServicesReport, and SmsReport
     const basePath = `CapstoneFlare/${normalizedStationKey}/AllReport`;
     const fireReportPath = `${basePath}/FireReport`;
     const otherEmergencyReportPath = `${basePath}/OtherEmergencyReport`;
     const emergencyMedicalServicesReportPath = `${basePath}/EmergencyMedicalServicesReport`;
     const smsReportPath = `${basePath}/SmsReport`;
 
-    // Get the Firebase database reference
     const db = firebase.database();
 
-    // Function to handle new replies
-    function handleNewReply(reportType, reportId, reply) {
-        if (!reply || reply.type !== 'reply') return;  // Only process replies
+    // ✅ Handle a new reply snapshot
+    function handleNewReply(reportType, reportId, msgSnap) {
+        const reply = msgSnap.val();
+        if (!reply || reply.type !== "reply") return;
 
-        // Show the toast notification when a new reply is received
+        const messageKey = msgSnap.key; // ✅ Firebase snapshot key
+        const messageId = `${reportType}|${reportId}|msg${messageKey}`;
+
+        console.log(`[ReplyDetected] ${messageId}`, reply);
+
+        // Prevent duplicates using localStorage
+        if (localStorage.getItem(messageId)) {
+            console.log(`[Skipped] ${messageId} already shown.`);
+            return;
+        }
+
+        // ✅ Show toast
         showQueuedToast({
-            id: `${reportType}|${reportId}|msg${reply.key}`,
-            type: 'message',
-            reporterName: reply.reporterName || 'Unknown',  // Use reporterName from the reply or fallback
-            message: "New reply received. Tap to view the message.",
-            sound: messageSound  // Optional: sound can be passed here
+            id: messageId,
+            type: "message",
+            reporterName: reply.reporterName || "Unknown",
+            message: reply.text ? reply.text : "New reply received. Tap to view the message.",
+            sound: messageSound
         });
+
+        // ✅ Mark message as shown
+        localStorage.setItem(messageId, "true");
     }
 
-    // Function to handle potential errors
     function handleError(error) {
         console.error("[FLARE] Firebase listener error:", error);
     }
 
-    // Listen for new Fire Reports and replies
-    const fireReportListener = db.ref(fireReportPath).on('child_added', async reportSnap => {
-        const reportId = reportSnap.key;
-        const messagesRef = reportSnap.ref.child('messages');  // Reference to the messages node
+    // --- Helper to attach listener for each report type ---
+    function attachMessageListener(path, reportType) {
+        db.ref(path).on("child_added", async reportSnap => {
+            const reportId = reportSnap.key;
+            const messagesRef = reportSnap.ref.child("messages");
 
-        // Listen for new replies under this report
-        messagesRef.on('child_added', async msgSnap => {
-            const msg = msgSnap.val();
-            handleNewReply('fireReports', reportId, msg);  // Handle new reply for Fire Report
-        });
+            console.log(`[Listener] Watching messages for ${reportType} report: ${reportId}`);
 
-        // Listen for changes (updates) in replies
-        messagesRef.on('child_changed', async msgSnap => {
-            const msg = msgSnap.val();
-            handleNewReply('fireReports', reportId, msg);  // Handle reply update
-        });
-    }, handleError);
+            // Listen for new replies
+            messagesRef.on("child_added", msgSnap => handleNewReply(reportType, reportId, msgSnap));
 
-    // Listen for new Other Emergency Reports and replies
-    const emergencyReportListener = db.ref(otherEmergencyReportPath).on('child_added', async reportSnap => {
-        const reportId = reportSnap.key;
-        const messagesRef = reportSnap.ref.child('messages');  // Reference to the messages node
-
-        // Listen for new replies under this report
-        messagesRef.on('child_added', async msgSnap => {
-            const msg = msgSnap.val();
-            handleNewReply('otherEmergency', reportId, msg);  // Handle new reply for Other Emergency Report
-        });
-
-        // Listen for changes (updates) in replies
-        messagesRef.on('child_changed', async msgSnap => {
-            const msg = msgSnap.val();
-            handleNewReply('otherEmergency', reportId, msg);  // Handle reply update
-        });
-    }, handleError);
-
-    // Listen for new Emergency Medical Services Reports and replies
-    const emergencyMedicalServicesReportListener = db.ref(emergencyMedicalServicesReportPath).on('child_added', async reportSnap => {
-        const reportId = reportSnap.key;
-        const messagesRef = reportSnap.ref.child('messages');  // Reference to the messages node
-
-        // Listen for new replies under this report
-        messagesRef.on('child_added', async msgSnap => {
-            const msg = msgSnap.val();
-            handleNewReply('emergencyMedicalServices', reportId, msg);  // Handle new reply for Emergency Medical Services Report
-        });
-
-        // Listen for changes (updates) in replies
-        messagesRef.on('child_changed', async msgSnap => {
-            const msg = msgSnap.val();
-            handleNewReply('emergencyMedicalServices', reportId, msg);  // Handle reply update
-        });
-    }, handleError);
-
-    // Listen for new SMS Reports and replies
-    const smsReportListener = db.ref(smsReportPath).on('child_added', async reportSnap => {
-        const reportId = reportSnap.key;
-        const messagesRef = reportSnap.ref.child('messages');  // Reference to the messages node
-
-        // Listen for new replies under this report
-        messagesRef.on('child_added', async msgSnap => {
-            const msg = msgSnap.val();
-            handleNewReply('smsReports', reportId, msg);  // Handle new reply for SMS Report
-        });
-
-        // Listen for changes (updates) in replies
-        messagesRef.on('child_changed', async msgSnap => {
-            const msg = msgSnap.val();
-            handleNewReply('smsReports', reportId, msg);  // Handle reply update
-        });
-    }, handleError);
-
-    // Ensure to remove listeners when they are no longer needed
-    function removeListeners() {
-        db.ref(fireReportPath).off('child_added', fireReportListener);
-        db.ref(fireReportPath).off('child_changed', fireReportListener);
-        db.ref(otherEmergencyReportPath).off('child_added', emergencyReportListener);
-        db.ref(otherEmergencyReportPath).off('child_changed', emergencyReportListener);
-        db.ref(emergencyMedicalServicesReportPath).off('child_added', emergencyMedicalServicesReportListener);
-        db.ref(emergencyMedicalServicesReportPath).off('child_changed', emergencyMedicalServicesReportListener);
-        db.ref(smsReportPath).off('child_added', smsReportListener);
-        db.ref(smsReportPath).off('child_changed', smsReportListener);
-        console.log("[FLARE] Stopped listening to message replies.");
+            // Listen for updates
+            messagesRef.on("child_changed", msgSnap => handleNewReply(reportType, reportId, msgSnap));
+        }, handleError);
     }
 
-    console.log("[FLARE] Listening for new replies on FireReports, OtherEmergencyReports, EmergencyMedicalServicesReports, and SmsReports...");
+    // ✅ Attach listeners for all categories
+    attachMessageListener(fireReportPath, "fireReports");
+    attachMessageListener(otherEmergencyReportPath, "otherEmergency");
+    attachMessageListener(emergencyMedicalServicesReportPath, "emergencyMedicalServices");
+    attachMessageListener(smsReportPath, "smsReports");
+
+    console.log("[FLARE] Listening for new replies on all report types...");
 }
+
+
 
 
 
