@@ -1128,6 +1128,8 @@
                             </div>
                         </div>
 
+
+
                         <!-- ============================
                 SMS Report Details
             ============================= -->
@@ -1182,11 +1184,7 @@
                                     </div>
                                     <br>
 
-                                    <div class="flex">
-                                        <strong class="text-gray-700 w-40 shrink-0">Distance:</strong>
-                                        <span id="detailNearestDistanceSms"
-                                            class="text-gray-600 flex-1 break-words"></span>
-                                    </div>
+
                                     <br>
 
                                 </div>
@@ -3610,16 +3608,7 @@ async function renderReports() {
                     locEl.innerText = loc || 'N/A';
                     locEl.title = loc && loc !== 'N/A' ? String(loc) : '';
 
-                    // Distance (nearestStationDistanceMeters)
-                    (function() {
-                        const raw = pick('nearestStationDistanceMeters');
-                        const m = Number(raw);
-                        let pretty = 'N/A';
-                        if (Number.isFinite(m) && m >= 0) {
-                            pretty = m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(2)} km`;
-                        }
-                        document.getElementById('detailNearestDistanceSms').innerText = pretty;
-                    })();
+
 
                     // Show the details panel
                     document.getElementById('smsDetails').classList.remove('hidden');
