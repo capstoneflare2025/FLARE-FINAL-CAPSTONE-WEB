@@ -30,7 +30,7 @@
                placeholder="e.g. 0999-123-4567" required disabled>
       </div>
 
-      <!-- Station Status -->
+      {{-- <!-- Station Status -->
       <div class="flex flex-col md:flex-row items-center border-b border-gray-300 pb-4">
         <label for="admin-status" class="w-full md:w-1/4 text-lg font-semibold text-gray-700">Station Status</label>
         <select id="admin-status" name="admin_status"
@@ -39,7 +39,7 @@
           <option value="Active">Active</option>
           <option value="Inactive">Inactive</option>
         </select>
-      </div>
+      </div> --}}
 
       <!-- Change Password -->
       <div class="text-xl font-semibold text-gray-800">Change Password</div>
